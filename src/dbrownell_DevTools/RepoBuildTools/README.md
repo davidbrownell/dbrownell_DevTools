@@ -1,0 +1,3 @@
+ Many repositories contain a file at root of the repository the performs tasks often invoked when building and/or publishing the repository. Examples of these tasks include linting, compiling, testing, packaging, and publishing. Oftentimes, the implementation of these tasks has less to do with the repository and more to do with the programming language(s) used within the repository.
+
+ This module contains implementations for common repository build tools, organized by programming language. A repository can leverage the tasks defined here rather than recreating the same functionality across different repositories.

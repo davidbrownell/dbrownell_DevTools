@@ -1,0 +1,13 @@
+Activate*.cmd
+Activate*.sh
+Deactivate*.cmd
+Deactivate*.sh
+
+**/__pycache__/**
+**/Generated/**
+**/.coverage
+**/lcov.info
+**/.vscode
+
+dist/**
+src/dbrownell_DevTools.egg-info/**
