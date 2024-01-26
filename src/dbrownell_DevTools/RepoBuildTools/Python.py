@@ -20,6 +20,7 @@ import re
 from pathlib import Path
 from typing import Annotated, Callable, Optional
 
+from AutoGitSemVer.Lib import GetSemanticVersion
 from dbrownell_Common import PathEx
 from dbrownell_Common.Streams.DoneManager import (
     DoneManager,
@@ -220,7 +221,31 @@ def UpdateVersionFuncFactory(
     ) -> None:
         """Updates the version of the python package."""
 
-        pass
+        with DoneManager.CreateCommandLine(
+            flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
+        ) as dm:
+            with dm.Nested("Calculating version...") as version_dm:
+                result = GetSemanticVersion(
+                    version_dm,
+                    source_root,
+                    include_branch_name_when_necessary=False,
+                    no_metadata=True,
+                )
+
+            with dm.Nested("Updating '{}'...".format(init_filename)):
+                with init_filename.open() as f:
+                    content = f.read()
+
+                content = re.sub(
+                    r"^__version__\s*=\s*.*$",
+                    '__version__ = "{}"'.format(result.semantic_version),
+                    content,
+                    count=1,
+                    flags=re.MULTILINE,
+                )
+
+                with init_filename.open("w") as f:
+                    f.write(content)
 
     # ----------------------------------------------------------------------
 
