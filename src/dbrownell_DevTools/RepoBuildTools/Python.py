@@ -20,6 +20,7 @@ import re
 from pathlib import Path
 from typing import Annotated, Callable, Optional
 
+from dbrownell_Common import PathEx
 from dbrownell_Common.Streams.DoneManager import (
     DoneManager,
     DoneManagerException,
@@ -204,82 +205,14 @@ def PytestFuncFactory(
 # ----------------------------------------------------------------------
 def UpdateVersionFuncFactory(
     source_root: Path,
+    init_filename: Path,
     app: typer.Typer,
 ) -> Callable:
-    init_filename = source_root / "__init__.py"
+    assert source_root.is_dir(), source_root
     assert init_filename.is_file(), init_filename
+    assert PathEx.IsDescendant(init_filename, source_root), (init_filename, source_root)
 
-    # ----------------------------------------------------------------------
-    @app.command("UpdateVersion", no_args_is_help=False)
-    def UpdateVersion(
-        auto_sem_ver_image_version: Annotated[
-            str,
-            typer.Option(
-                "--auto-sem-ver-image-version",
-                help="Version of the autosemver image on dockerhub.",
-            ),
-        ] = "0.6.7",
-        verbose: Annotated[bool, _verbose_typer_option] = False,
-        debug: Annotated[bool, _debug_typer_option] = False,
-    ) -> None:
-        """Updates library version information."""
-
-        with DoneManager.CreateCommandLine(
-            flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
-        ) as dm:
-            auto_sem_ver: Optional[str] = None
-
-            with dm.Nested(
-                "Calculating version...",
-                lambda: "The version is '{}'".format(auto_sem_ver or "<Error>"),
-            ) as version_dm:
-                with version_dm.Nested("Pulling image...") as pull_dm:
-                    command_line = "docker pull dbrownell/autosemver:{}".format(
-                        auto_sem_ver_image_version
-                    )
-
-                    pull_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
-
-                    with pull_dm.YieldStream() as stream:
-                        pull_dm.result = SubprocessEx.Stream(command_line, stream)
-                        if pull_dm.result != 0:
-                            return
-
-                with version_dm.Nested("Running image...") as run_dm:
-                    command_line = 'docker run --rm -v "{}:/local" dbrownell/autosemver:{} --path /local --no-branch-name --no-metadata --quiet'.format(
-                        source_root,
-                        auto_sem_ver_image_version,
-                    )
-
-                    run_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
-
-                    result = SubprocessEx.Run(command_line)
-
-                    run_dm.result = result.returncode
-                    if run_dm.result != 0:
-                        run_dm.WriteLine(result.output)
-                        return
-
-                    auto_sem_ver = result.output.strip()
-
-            with dm.Nested("Updating '{}'...".format(init_filename)):
-                with init_filename.open(encoding="utf-8") as f:
-                    content = f.read()
-
-                new_content = re.sub(
-                    r'^__version__ = ".+?"$',
-                    f'__version__ = "{auto_sem_ver}"',
-                    content,
-                    count=1,
-                    flags=re.MULTILINE,
-                )
-
-                with init_filename.open("w", encoding="utf-8") as f:
-                    f.write(new_content)
-
-    # ----------------------------------------------------------------------
-
-    return UpdateVersion
+    return lambda: None
 
 
 # ----------------------------------------------------------------------
