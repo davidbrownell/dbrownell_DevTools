@@ -1,0 +1,134 @@
+# ----------------------------------------------------------------------
+# |
+# |  callable_action_contexts.yaml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2024-01-11 08:00:59
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2024
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
+name: "[impl] GitHub Action Contexts"
+run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
+
+on:
+  workflow_call:
+
+jobs:
+  action_contexts:
+    name: "Display GitHub Action Contexts"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Dump 'github' Context
+        shell: bash
+        run: |
+          set +e
+
+          echo "--------------------------------------------------------------------------------"
+          echo "github"
+          echo "--------------------------------------------------------------------------------"
+          echo ""
+
+          cat > _github_context <<END_OF_CONTENT
+          ${{ toJSON(github) }}
+          END_OF_CONTENT
+
+          cat _github_context
+
+          exit 0
+
+      - name: Dump 'job' Context
+        shell: bash
+        run: |
+          set +e
+
+          echo "--------------------------------------------------------------------------------"
+          echo "job"
+          echo "--------------------------------------------------------------------------------"
+          echo ""
+
+          cat > _job_context <<END_OF_CONTENT
+          ${{ toJSON(job) }}
+          END_OF_CONTENT
+
+          cat _job_context
+
+          exit 0
+
+      - name: Dump 'steps' Context
+        shell: bash
+        run: |
+          set +e
+
+          echo "--------------------------------------------------------------------------------"
+          echo "steps"
+          echo "--------------------------------------------------------------------------------"
+          echo ""
+
+          cat > _steps_context <<END_OF_CONTENT
+          ${{ toJSON(steps) }}
+          END_OF_CONTENT
+
+          cat _steps_context
+
+          exit 0
+
+      - name: Dump 'runner' Context
+        shell: bash
+        run: |
+          set +e
+
+          echo "--------------------------------------------------------------------------------"
+          echo "runner"
+          echo "--------------------------------------------------------------------------------"
+          echo ""
+
+          cat > _runner_context <<END_OF_CONTENT
+          ${{ toJSON(runner) }}
+          END_OF_CONTENT
+
+          cat _runner_context
+
+          exit 0
+
+      - name: Dump 'strategy' Context
+        shell: bash
+        run: |
+          set +e
+
+          echo "--------------------------------------------------------------------------------"
+          echo "strategy"
+          echo "--------------------------------------------------------------------------------"
+          echo ""
+
+          cat > _strategy_context <<END_OF_CONTENT
+          ${{ toJSON(strategy) }}
+          END_OF_CONTENT
+
+          cat _strategy_context
+
+          exit 0
+
+      - name: Dump 'matrix' Context
+        shell: bash
+        run: |
+          set +e
+
+          echo "--------------------------------------------------------------------------------"
+          echo "matrix"
+          echo "--------------------------------------------------------------------------------"
+          echo ""
+
+          cat > _matrix_context <<END_OF_CONTENT
+          ${{ toJSON(matrix) }}
+          END_OF_CONTENT
+
+          cat _matrix_context
+
+          exit 0

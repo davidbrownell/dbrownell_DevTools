@@ -1,0 +1,87 @@
+# ----------------------------------------------------------------------
+# |
+# |  action.yml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2023-12-27 11:22:16
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2023
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
+name: Initialize
+description: Generates outputs that are useful for other CI steps.
+
+inputs:
+  operating_system:
+    description: "The operating system that the action is running on."
+    type: string
+    required: true
+
+outputs:
+  script_prefix:
+    description: The prefix required to run a script from the local directory.
+    value: ${{ steps.script_prefix.outputs.result }}
+
+  script_extension:
+    description: The filename extension for a script based on the operating system.
+    value: ${{ steps.script_extension.outputs.result }}
+
+  shell_name:
+    description: "Name of shell used to invoke GitHub actions."
+    value: ${{ steps.shell_name.outputs.result }}
+
+  source_command:
+    description: "Command used when invoking a script that changes the state of the current environment."
+    value: ${{ steps.source_command.outputs.result }}
+
+  sudo_command:
+    description: "Command used to invoke privileged operations."
+    value: ${{ steps.sudo_command.outputs.result }}
+
+runs:
+  using: composite
+  steps:
+    - name: "Script Prefix"
+      id: script_prefix
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          return "${{ inputs.operating_system }}".startsWith("windows") ? "" : "./"
+
+    - name: "Script Extension"
+      id: script_extension
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          return "${{ inputs.operating_system }}".startsWith("windows") ? ".cmd" : ".sh"
+
+    - name: "Shell Name"
+      id: shell_name
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          return "${{ inputs.operating_system }}".startsWith("windows") ? "cmd" : "bash"
+
+    - name: "Source Command"
+      id: source_command
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          return "${{ inputs.operating_system }}".startsWith("windows") ? "call" : "source"
+
+    - name: "Sudo Command"
+      id: sudo_command
+      uses: actions/github-script@v7
+      with:
+        result-encoding: string
+        script: |
+          return "${{ inputs.operating_system }}".startsWith("windows") ? "" : "sudo"
