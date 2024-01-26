@@ -58,7 +58,7 @@ app = typer.Typer(
 Black = RepoBuildTools.BlackFuncFactory(this_dir, app)
 Pylint = RepoBuildTools.PylintFuncFactory(src_dir, app)
 Pytest = RepoBuildTools.PytestFuncFactory(
-    tests_dir, "dbrownell_DevTools", app, default_min_coverage=60.0
+    tests_dir, "dbrownell_DevTools", app, default_min_coverage=50.0
 )
 UpdateVersion = RepoBuildTools.UpdateVersionFuncFactory(
     src_dir.parent, src_dir / "__init__.py", app

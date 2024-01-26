@@ -55,6 +55,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "AutoGitSemVer",
     "black == 23.*",
     "coverage == 7.*",
     "dbrownell_Common",
