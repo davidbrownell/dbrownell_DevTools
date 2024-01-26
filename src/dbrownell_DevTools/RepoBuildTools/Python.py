@@ -51,7 +51,7 @@ def BlackFuncFactory(
     app: typer.Typer,
 ) -> Callable:
     # ----------------------------------------------------------------------
-    @app.command("Black", no_args_is_help=False)
+    @app.command("black", no_args_is_help=False)
     def Black(
         format: Annotated[  # pylint: disable=redefined-builtin
             bool,
@@ -94,7 +94,7 @@ def PylintFuncFactory(
     default_min_score: float = 9.5,
 ) -> Callable:
     # ----------------------------------------------------------------------
-    @app.command("Pylint", no_args_is_help=False)
+    @app.command("pylint", no_args_is_help=False)
     def Pylint(
         min_score: Annotated[
             float,
@@ -140,7 +140,7 @@ def PytestFuncFactory(
     default_min_coverage: float = 95.0,
 ) -> Callable:
     # ----------------------------------------------------------------------
-    @app.command("Pytest", no_args_is_help=False)
+    @app.command("pytest", no_args_is_help=False)
     def Pytest(
         code_coverage: Annotated[
             bool,
@@ -214,7 +214,7 @@ def UpdateVersionFuncFactory(
     assert PathEx.IsDescendant(init_filename, source_root), (init_filename, source_root)
 
     # ----------------------------------------------------------------------
-    @app.command("UpdateVersion", no_args_is_help=False)
+    @app.command("update_version", no_args_is_help=False)
     def UpdateVersion(
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
@@ -258,7 +258,7 @@ def PackageFuncFactory(
     app: typer.Typer,
 ) -> Callable:
     # ----------------------------------------------------------------------
-    @app.command("Package", no_args_is_help=False)
+    @app.command("package", no_args_is_help=False)
     def Package(
         additional_args: Annotated[
             Optional[list[str]],
@@ -301,7 +301,7 @@ def PublishFuncFactory(
     app: typer.Typer,
 ) -> Callable:
     # ----------------------------------------------------------------------
-    @app.command("Publish", no_args_is_help=False)
+    @app.command("publish", no_args_is_help=False)
     def Publish(
         pypi_api_token: Annotated[
             str,
