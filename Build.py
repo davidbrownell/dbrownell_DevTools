@@ -34,6 +34,16 @@ class NaturalOrderGrouper(TyperGroup):
 
 
 # ----------------------------------------------------------------------
+app = typer.Typer(
+    cls=NaturalOrderGrouper,
+    help=__doc__,
+    no_args_is_help=True,
+    pretty_exceptions_show_locals=False,
+    pretty_exceptions_enable=False,
+)
+
+
+# ----------------------------------------------------------------------
 this_dir = Path(__file__).parent
 assert this_dir.is_dir(), this_dir
 
@@ -42,16 +52,6 @@ assert src_dir.is_dir(), src_dir
 
 tests_dir = this_dir / "tests"
 assert tests_dir.is_dir(), tests_dir
-
-
-# ----------------------------------------------------------------------
-app = typer.Typer(
-    cls=NaturalOrderGrouper,
-    help=__doc__,
-    no_args_is_help=True,
-    pretty_exceptions_show_locals=False,
-    pretty_exceptions_enable=False,
-)
 
 
 # ----------------------------------------------------------------------
