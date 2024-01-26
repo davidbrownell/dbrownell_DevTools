@@ -75,7 +75,7 @@ runs:
         name: "${{ inputs.operating_system }}; ${{ inputs.python_version }}"
         path: dist/
 
-    - uses: dorny/paths-filter@v2
+    - uses: dorny/paths-filter@v3
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       id: has_code_changes
       with:
