@@ -122,7 +122,7 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/PythonBootstrapper/.github/actions/initialize@main
+        uses: ./.github/actions/initialize
         with:
           operating_system: ubuntu-latest
 
