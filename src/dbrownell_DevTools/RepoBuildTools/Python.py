@@ -212,7 +212,19 @@ def UpdateVersionFuncFactory(
     assert init_filename.is_file(), init_filename
     assert PathEx.IsDescendant(init_filename, source_root), (init_filename, source_root)
 
-    return lambda: None
+    # ----------------------------------------------------------------------
+    @app.command("UpdateVersion", no_args_is_help=False)
+    def UpdateVersion(
+        verbose: Annotated[bool, _verbose_typer_option] = False,
+        debug: Annotated[bool, _debug_typer_option] = False,
+    ) -> None:
+        """Updates the version of the python package."""
+
+        pass
+
+    # ----------------------------------------------------------------------
+
+    return UpdateVersion
 
 
 # ----------------------------------------------------------------------
