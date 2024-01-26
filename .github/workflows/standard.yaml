@@ -76,7 +76,7 @@ jobs:
           operating_system: ${{ matrix.os }}
 
       - name: Validate
-        uses: ./.github/actions/validate
+        uses: ./.github/actions/python_validate
         with:
           operating_system: ${{ matrix.os }}
           python_version: ${{ matrix.python_version }}
@@ -127,7 +127,7 @@ jobs:
           operating_system: ubuntu-latest
 
       - name: Package
-        uses: ./.github/actions/package
+        uses: ./.github/actions/python_package
         with:
           operating_system: ${{ matrix.os }}
           python_version: ${{ matrix.python_version }}
