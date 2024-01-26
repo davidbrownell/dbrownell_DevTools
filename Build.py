@@ -43,6 +43,8 @@ assert src_dir.is_dir(), src_dir
 tests_dir = this_dir / "tests"
 assert tests_dir.is_dir(), tests_dir
 
+
+# ----------------------------------------------------------------------
 app = typer.Typer(
     cls=NaturalOrderGrouper,
     help=__doc__,
@@ -56,9 +58,11 @@ app = typer.Typer(
 Black = RepoBuildTools.BlackFuncFactory(this_dir, app)
 Pylint = RepoBuildTools.PylintFuncFactory(src_dir, app)
 Pytest = RepoBuildTools.PytestFuncFactory(
-    tests_dir, "dbrownell_DevTools", app, default_min_coverage=50.0
+    tests_dir, "dbrownell_DevTools", app, default_min_coverage=60.0
 )
-UpdateVersion = RepoBuildTools.UpdateVersionFuncFactory(src_dir, app)
+UpdateVersion = RepoBuildTools.UpdateVersionFuncFactory(
+    src_dir.parent, src_dir / "__init__.py", app
+)
 Package = RepoBuildTools.PackageFuncFactory(this_dir, app)
 Publish = RepoBuildTools.PublishFuncFactory(this_dir, app)
 
