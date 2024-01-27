@@ -3,7 +3,7 @@
 # |  action.yml
 # |
 # |  David Brownell <db@DavidBrownell.com>
-# |      2024-01-26 21:38:23
+# |      2024-01-21 14:12:05
 # |
 # ----------------------------------------------------------------------
 # |
@@ -13,8 +13,8 @@
 # |  http://www.boost.org/LICENSE_1_0.txt.
 # |
 # ----------------------------------------------------------------------
-name: "[impl] Publish"
-description: "Publishes the current repository"
+name: "[impl] Package"
+description: "Packages the current repository"
 
 inputs:
   operating_system:
@@ -45,15 +45,28 @@ inputs:
     required: true
     type: string
 
-  pypi_token:
-    required: true
-    type: string
-
 runs:
   using: composite
   steps:
-    - name: Publish
+    - name: Bootstrap
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version ${{ inputs.python_version }} --package
+
+    - name: Update Version
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py publish ${{ inputs.pypi_token }} --production --verbose
+        python Build.py update_version --verbose
+
+    - name: Package
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+        python Build.py package --verbose
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: "${{ inputs.operating_system }}; ${{ inputs.python_version }}"
+        path: dist/

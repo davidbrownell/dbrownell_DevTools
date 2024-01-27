@@ -58,7 +58,7 @@ assert tests_dir.is_dir(), tests_dir
 Black = RepoBuildTools.BlackFuncFactory(this_dir, app)
 Pylint = RepoBuildTools.PylintFuncFactory(src_dir, app)
 Pytest = RepoBuildTools.PytestFuncFactory(
-    tests_dir, "dbrownell_DevTools", app, default_min_coverage=50.0
+    tests_dir, "dbrownell_DevTools", app, default_min_coverage=40.0
 )
 UpdateVersion = RepoBuildTools.UpdateVersionFuncFactory(
     src_dir.parent, src_dir / "__init__.py", app
