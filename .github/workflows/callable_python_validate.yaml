@@ -51,12 +51,12 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@TemporaryCI # TODO: Change to main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
         with:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Validate
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_validate_impl@TemporaryCI # TODO: Change to main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_validate_impl@main
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
