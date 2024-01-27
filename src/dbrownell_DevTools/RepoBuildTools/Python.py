@@ -19,7 +19,7 @@ import os
 import re
 import shutil
 
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Annotated, Callable, Optional
 
 from AutoGitSemVer.Lib import GetSemanticVersion  # type: ignore [import-untyped]
@@ -417,28 +417,35 @@ def _PreparePublishArtifacts(
                 all_filenames.append(root_path / walk_filename)
 
     # Organize the files
-    python_files: dict[str, list[Path]] = {}
+    wheel_files: dict[str, list[Path]] = {}
+    other_files: list[Path] = []
 
-    with dm.Nested("Organizing files...") as organize_dm:
+    with dm.Nested("Organizing files..."):
         for filename in all_filenames:
-            if filename.name.endswith(".whl") or (
-                "py" in filename.name and filename.name.endswith(".tar.gz")
-            ):
-                python_files.setdefault(filename.name, []).append(filename)
+            if filename.name.endswith(".whl"):
+                wheel_files.setdefault(filename.name, []).append(filename)
             else:
-                organize_dm.WriteError("'{}' is not a supported file type.\n".format(filename))
+                other_files.append(filename)
 
-        if organize_dm.result != 0:
-            return
-
-        for filenames in python_files.values():
+        for filenames in wheel_files.values():
             filenames.sort(key=lambda f: f.stat().st_size)
 
     with dm.Nested("Copying files...") as copy_dm:
         dist_dir.mkdir(parents=True, exist_ok=True)
 
-        for python_filenames in python_files.values():
+        for python_filenames in wheel_files.values():
             filename = python_filenames[0]
 
             with copy_dm.Nested("Copying '{}'...".format(filename.name)):
                 shutil.copyfile(filename, dist_dir / filename.name)
+
+        num_stage_dir_parts = len(stage_dir.parts)
+
+        for other_file in other_files:
+            relative_path = PurePath(*other_file.parts[num_stage_dir_parts:])
+
+            dest_filename = dist_dir / relative_path
+            dest_filename.parent.mkdir(parents=True, exist_ok=True)
+
+            with copy_dm.Nested("Copying '{}'...".format(relative_path)):
+                shutil.copyfile(other_file, dest_filename)
