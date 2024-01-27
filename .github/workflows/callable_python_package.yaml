@@ -1,0 +1,67 @@
+# ----------------------------------------------------------------------
+# |
+# |  callable_python_package.yaml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2024-01-27 10:59:54
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2024
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
+name: "[impl] Packages Python changes"
+run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
+
+on:
+  workflow_call:
+    inputs:
+      operating_system:
+        required: true
+        type: string
+
+      python_version:
+        required: true
+        type: string
+
+jobs:
+  validate:
+    name: Execute
+    runs-on: ${{ inputs.operating_system }}
+
+    env:
+      COLUMNS: "200"
+      SIMULATE_TERMINAL_CAPABILITIES_SUPPORTS_COLORS: "1"
+      PYTHONIOENCODING: "UTF-8"
+
+    steps:
+      # Ensure that windows machines support long paths
+      - name: git Long File Path Support on Windows
+        if: ${{ startsWith(inputs.operating_system, 'windows') }}
+        run: |
+          git config --system core.longpaths true
+
+      - name: "Checkout Source"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Initialize
+        id: Initialize
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@TemporaryCI # TODO: Change to main
+        with:
+          operating_system: ${{ inputs.operating_system }}
+
+      - name: Package
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_package_impl@TemporaryCI # TODO: Change to main
+        with:
+          operating_system: ${{ inputs.operating_system }}
+          python_version: ${{ inputs.python_version }}
+          script_prefix: ${{ steps.initialize.outputs.script_prefix }}
+          script_extension: ${{ steps.initialize.outputs.script_extension }}
+          shell_name: ${{ steps.initialize.outputs.shell_name }}
+          source_command: ${{ steps.initialize.outputs.source_command }}
+          sudo_command: ${{ steps.initialize.outputs.sudo_command }}

@@ -57,16 +57,16 @@ runs:
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py black
+        python Build.py black --verbose
 
     - name: Pylint
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py pylint
+        python Build.py pylint --verbose
 
     - name: Pytest
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py pytest --code-coverage
+        python Build.py pytest --code-coverage --verbose
