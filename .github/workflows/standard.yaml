@@ -53,7 +53,7 @@ jobs:
 
     name: Validate
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_validate.yaml@TemporaryCI # TODO: change to main
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_validate.yaml@main
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -75,10 +75,12 @@ jobs:
           - "3.12"
           - "3.11"
           - "3.10"
+          # - "3.9"  # Not supported
+          # - "3.8"  # Not supported
 
     name: Package
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_package.yaml@TemporaryCI # TODO: change to main
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_package.yaml@main
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -89,5 +91,5 @@ jobs:
 
     name: Publish
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_publish.yaml@TemporaryCI # TODO: change to main
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_publish.yaml@main
     secrets: inherit
