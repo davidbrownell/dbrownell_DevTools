@@ -137,7 +137,8 @@ jobs:
           source_command: ${{ steps.initialize.outputs.source_command }}
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
 
-      - uses: dorny/paths-filter@v3
+      - name: Has Source Changes?
+        uses: dorny/paths-filter@v3
         id: has_code_changes
         with:
           filters: |
