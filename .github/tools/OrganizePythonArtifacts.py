@@ -26,6 +26,7 @@ from typing import Annotated, Optional
 import typer
 
 from dbrownell_Common.InflectEx import inflect  # type: ignore [import-untyped]
+from dbrownell_Common import PathEx  # type: ignore [import-untyped]
 from dbrownell_Common.Streams.DoneManager import DoneManager  # type: ignore [import-untyped]
 from typer.core import TyperGroup  # type: ignore [import-untyped]
 
@@ -134,12 +135,15 @@ def Organize(
                         this_copy_dm.WriteInfo(
                             textwrap.dedent(
                                 """\
-                                Multiple files were found for '{}' (the smallest in size was used):
+                                Multiple files were found for '{}' (the first file will be copied):
                                 {}
                                 """,
                             ).format(
                                 filename.name,
-                                "\n".join("    - {}".format(f) for f in filenames),
+                                "\n".join(
+                                    "    {}) [{}] {}".format(index + 1, PathEx.GetSizeDisplay(f), f)
+                                    for index, f in enumerate(filenames)
+                                ),
                             ),
                         )
 
