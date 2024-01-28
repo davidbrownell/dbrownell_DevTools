@@ -15,15 +15,12 @@
 # ----------------------------------------------------------------------
 """Implement tasks used when working with Python repositories."""
 
-import os
 import re
-import shutil
 
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Annotated, Callable, Optional
 
 from AutoGitSemVer.Lib import GetSemanticVersion  # type: ignore [import-untyped]
-from dbrownell_Common.InflectEx import inflect  # type: ignore [import-untyped]
 from dbrownell_Common import PathEx  # type: ignore [import-untyped]
 from dbrownell_Common.Streams.DoneManager import (  # type: ignore [import-untyped]
     DoneManager,
@@ -316,13 +313,6 @@ def PublishFuncFactory(
             bool,
             typer.Option("--production", help="Push to the PyPi.org rather than test.PyPi.org."),
         ] = False,
-        github_action_run_id: Annotated[
-            Optional[str],
-            typer.Option(
-                "--github-action-run-id",
-                help="Indicates that the functionality is being involved from a GitHub action.",
-            ),
-        ] = None,
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
     ) -> None:
@@ -332,11 +322,6 @@ def PublishFuncFactory(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
             dist_dir = source_root / "dist"
-
-            if not dist_dir.is_dir() and github_action_run_id is not None:
-                _PreparePublishArtifacts(dm, source_root, github_action_run_id)
-                if dm.result != 0:
-                    return
 
             if not dist_dir.is_dir():
                 raise DoneManagerException(
@@ -371,81 +356,3 @@ def PublishFuncFactory(
     # ----------------------------------------------------------------------
 
     return Publish
-
-
-# ----------------------------------------------------------------------
-# ----------------------------------------------------------------------
-# ----------------------------------------------------------------------
-def _PreparePublishArtifacts(
-    dm: DoneManager,
-    source_root: Path,
-    github_action_run_id: str,
-) -> None:
-    stage_dir = source_root / "stage"
-    dist_dir = source_root / "dist"
-
-    with dm.Nested("Downloading build artifacts...") as download_dm:
-        command_line = "gh run download {} --dir {}".format(
-            github_action_run_id,
-            stage_dir.parts[-1],
-        )
-
-        download_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
-
-        with download_dm.YieldStream() as stream:
-            download_dm.result = SubprocessEx.Stream(
-                command_line,
-                stream,
-                cwd=source_root,
-            )
-            if download_dm.result != 0:
-                return
-
-    all_filenames: list[Path] = []
-
-    with dm.Nested(
-        "Collecting build artifacts...",
-        lambda: "{} found".format(inflect.no("file", len(all_filenames))),
-    ):
-        for root, _, walk_filenames in os.walk(stage_dir):
-            if not walk_filenames:
-                continue
-
-            root_path = Path(root)
-
-            for walk_filename in walk_filenames:
-                all_filenames.append(root_path / walk_filename)
-
-    # Organize the files
-    wheel_files: dict[str, list[Path]] = {}
-    other_files: list[Path] = []
-
-    with dm.Nested("Organizing files..."):
-        for filename in all_filenames:
-            if filename.name.endswith(".whl"):
-                wheel_files.setdefault(filename.name, []).append(filename)
-            else:
-                other_files.append(filename)
-
-        for filenames in wheel_files.values():
-            filenames.sort(key=lambda f: f.stat().st_size)
-
-    with dm.Nested("Copying files...") as copy_dm:
-        dist_dir.mkdir(parents=True, exist_ok=True)
-
-        for python_filenames in wheel_files.values():
-            filename = python_filenames[0]
-
-            with copy_dm.Nested("Copying '{}'...".format(filename.name)):
-                shutil.copyfile(filename, dist_dir / filename.name)
-
-        num_stage_dir_parts = len(stage_dir.parts)
-
-        for other_file in other_files:
-            relative_path = PurePath(*other_file.parts[num_stage_dir_parts:])
-
-            dest_filename = dist_dir / relative_path
-            dest_filename.parent.mkdir(parents=True, exist_ok=True)
-
-            with copy_dm.Nested("Copying '{}'...".format(relative_path)):
-                shutil.copyfile(other_file, dest_filename)

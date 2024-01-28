@@ -49,8 +49,44 @@ runs:
       run: |
         ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --package
 
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: stage
+
+    - name: Organize Artifacts
+      shell: ${{ inputs.shell_name }}
+      id: organize_artifacts
+      run: |
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/main/.github/tools/OrganizePythonArtifacts.py --output OrganizePythonArtifacts.py --no-progress-meter --fail-with-body
+
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+        python OrganizePythonArtifacts.py ./stage ./dist
+
+        echo "python_version=$(cat ./dist/__version__)" >> $GITHUB_OUTPUT
+
     - name: Publish
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py publish ${{ inputs.pypi_token }} --github-action-run-id ${{ github.run_id }} --production --verbose
+        python Build.py publish ${{ inputs.pypi_token }} --production --verbose
+
+    - name: Create Tag
+      shell: ${{ inputs.shell_name }}
+      run: |
+        git config user.name "GitHub Action Bot"
+        git config user.email "<>"
+
+        git tag --annotate --force -m "Publish Tag" "v${{ steps.organize_artifacts.outputs.python_version }}" "${{ github.sha }}"
+        git push origin "v${{ steps.organize_artifacts.outputs.python_version }}" --force
+
+    - name: Create GitHub Release
+      shell: ${{ inputs.shell_name }}
+      run: |
+        gh release create "v${{ steps.organize_artifacts.outputs.python_version }}"
+
+        for filename in ./dist/*; do
+            if [[ -f ${filename} ]]; then
+              gh release upload "v${{ steps.organize_artifacts.outputs.python_version }}" "${filename}" --clobber
+            fi
+        done
