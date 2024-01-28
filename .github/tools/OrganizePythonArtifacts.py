@@ -18,8 +18,9 @@
 import os
 import re
 import shutil
+import textwrap
 
-from pathlib import Path, PurePath
+from pathlib import Path
 from typing import Annotated, Optional
 
 import typer
@@ -86,16 +87,15 @@ def Organize(
 
         # Organize the files
         wheel_version: Optional[str] = None
-        wheel_files: dict[str, list[Path]] = {}
-        other_files: list[Path] = []
+        all_files: dict[str, list[Path]] = {}
 
         with dm.Nested("Organizing files...") as organize_dm:
             python_version_regex = re.compile(r"^.+-(?P<version>.+?)-py.+$")
 
             for filename in all_filenames:
-                if filename.suffix == ".whl":
-                    wheel_files.setdefault(filename.name, []).append(filename)
+                all_files.setdefault(filename.name, []).append(filename)
 
+                if filename.suffix == ".whl":
                     match = python_version_regex.match(filename.name)
                     if match is None:
                         organize_dm.WriteError(
@@ -118,31 +118,30 @@ def Organize(
                             )
                         )
 
-                else:
-                    other_files.append(filename)
-
-            for filenames in wheel_files.values():
+            for filenames in all_files.values():
                 filenames.sort(key=lambda f: f.stat().st_size)
 
         with dm.Nested("Copying files...") as copy_dm:
             dest_dir.mkdir(parents=True, exist_ok=True)
 
-            for python_filenames in wheel_files.values():
-                filename = python_filenames[0]
+            for filenames in all_files.values():
+                filename = filenames[0]
 
-                with copy_dm.Nested("Copying '{}'...".format(filename.name)):
+                with copy_dm.Nested("Copying '{}'...".format(filename.name)) as this_copy_dm:
                     shutil.copyfile(filename, dest_dir / filename.name)
 
-            num_stage_dir_parts = len(stage_dir.parts)
-
-            for other_file in other_files:
-                relative_path = PurePath(*other_file.parts[num_stage_dir_parts:])
-
-                dest_filename = dest_dir / relative_path
-                dest_filename.parent.mkdir(parents=True, exist_ok=True)
-
-                with copy_dm.Nested("Copying '{}'...".format(relative_path)):
-                    shutil.copyfile(other_file, dest_filename)
+                    if len(filenames) > 1:
+                        this_copy_dm.WriteInfo(
+                            textwrap.dedent(
+                                """\
+                                Multiple files were found for '{}' (the smallest in size was used):
+                                {}
+                                """,
+                            ).format(
+                                filename.name,
+                                "\n".join("    - {}".format(f) for f in filenames),
+                            ),
+                        )
 
         with dm.Nested("Creating Version file...") as version_dm:
             version_filename = dest_dir / "__version__"
