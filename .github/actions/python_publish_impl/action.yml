@@ -44,15 +44,15 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Bootstrap
-      shell: ${{ inputs.shell_name }}
-      run: |
-        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --package
-
     - name: Download Artifacts
       uses: actions/download-artifact@v4
       with:
         path: stage
+
+    - name: Bootstrap
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --package
 
     - name: Organize Artifacts
       shell: ${{ inputs.shell_name }}

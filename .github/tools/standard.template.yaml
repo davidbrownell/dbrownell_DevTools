@@ -1,0 +1,93 @@
+name: "Standard"
+run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *' # Once a day at 12am UTC
+  workflow_dispatch:
+
+jobs:
+  # ----------------------------------------------------------------------
+  action_contexts:
+    name: "Display GitHub Action Contexts"
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_action_contexts.yaml@main
+
+  # ----------------------------------------------------------------------
+  validate:
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+        python_version:
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          # - "3.9"  # Not supported
+          # - "3.8"  # Not supported
+
+    name: Validate
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_validate.yaml@main
+    with:
+      operating_system: ${{ matrix.os }}
+      python_version: ${{ matrix.python_version }}
+
+  # ----------------------------------------------------------------------
+  package_coverage:
+    needs: validate
+
+    name: Postprocess Coverage Info
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_package_coverage.yaml@main
+    with:
+      gist_id: "<POPULATE: gist_value>"
+      gist_filename: "<POPULATE: gist filename>"
+    secrets: inherit
+
+  # ----------------------------------------------------------------------
+  package:
+    needs: validate
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+        python_version:
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          # - "3.9"  # Not supported
+          # - "3.8"  # Not supported
+
+    name: Package
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_package.yaml@main
+    with:
+      operating_system: ${{ matrix.os }}
+      python_version: ${{ matrix.python_version }}
+
+  # ----------------------------------------------------------------------
+  publish:
+    needs: package
+
+    name: Publish
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_publish.yaml@main
+    secrets: inherit

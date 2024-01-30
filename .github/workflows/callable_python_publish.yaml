@@ -18,6 +18,9 @@ run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name 
 
 on:
   workflow_call:
+    secrets:
+      PYPI_TOKEN:
+        required: true
 
 jobs:
   publish:
