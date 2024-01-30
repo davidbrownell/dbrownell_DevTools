@@ -63,7 +63,7 @@ jobs:
           . ./Activate.sh
 
           coverage combine stage
-          coverage report -m --skip-covered
+          coverage report --ignore-errors --show-missing --skip-covered
           coverage json
 
           export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
