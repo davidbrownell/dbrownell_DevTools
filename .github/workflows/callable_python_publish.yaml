@@ -58,6 +58,8 @@ jobs:
           filters: |
             src:
               - 'src/**'
+              - 'pyproject.toml'
+              - 'README.md'
 
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_code_changes.outputs.src == 'true' }}
