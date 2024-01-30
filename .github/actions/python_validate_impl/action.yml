@@ -70,3 +70,9 @@ runs:
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
         python Build.py pytest --code-coverage --verbose
+
+    - name: Upload Coverage Data
+      uses: actions/upload-artifact@v4
+      with:
+        name: .coverage.${{ inputs.operating_system }}.${{ inputs.python_version }}
+        path: tests/.coverage.${{ inputs.operating_system }}.${{ inputs.python_version }}

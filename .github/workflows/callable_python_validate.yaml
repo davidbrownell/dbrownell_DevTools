@@ -36,6 +36,7 @@ jobs:
       COLUMNS: "200"
       SIMULATE_TERMINAL_CAPABILITIES_SUPPORTS_COLORS: "1"
       PYTHONIOENCODING: "UTF-8"
+      COVERAGE_FILE: .coverage.${{ inputs.operating_system }}.${{ inputs.python_version }}
 
     steps:
       # Ensure that windows machines support long paths

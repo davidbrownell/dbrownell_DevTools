@@ -1,0 +1,83 @@
+# ----------------------------------------------------------------------
+# |
+# |  callable_python_package_coverage.yaml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2024-01-29 17:59:31
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2024
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
+name: "[impl] Packages Python Code Coverage Data"
+run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
+
+on:
+  workflow_call:
+    inputs:
+      gist_id:
+        required: true
+        type: string
+
+      gist_filename:
+        required: false
+        type: string
+        default: covbadge.json
+
+    secrets:
+      GIST_TOKEN:
+        required: true
+
+jobs:
+  package_coverage:
+    name: Execute
+    runs-on: ubuntu-latest
+
+    env:
+      COLUMNS: "200"
+      SIMULATE_TERMINAL_CAPABILITIES_SUPPORTS_COLORS: "1"
+      PYTHONIOENCODING: "UTF-8"
+
+    steps:
+      - name: "Checkout Source"
+        uses: actions/checkout@v4
+
+      - name: Download Coverage Data
+        uses: actions/download-artifact@v4
+        with:
+          path: stage
+          merge-multiple: true
+
+      - name: Bootstrap
+        shell: bash
+        run: |
+          ./Bootstrap.sh
+
+      - name: Combine
+        shell: bash
+        run: |
+          . ./Activate.sh
+
+          coverage combine stage
+          coverage report -m --skip-covered
+          coverage json
+
+          export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
+          echo "total=$TOTAL" >> $GITHUB_ENV
+          echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
+
+      - name: Make Coverage Badge
+        uses: schneegans/dynamic-badges-action@v1.7.0
+        with:
+          auth: ${{ secrets.GIST_TOKEN }}
+          gistID: ${{ inputs.gist_id }}
+          filename: ${{ inputs.gist_filename }}
+          label: Coverage
+          message: ${{ env.total }}%
+          minColorRange: 50
+          maxColorRange: 90
+          valColorRange: ${{ env.total }}
