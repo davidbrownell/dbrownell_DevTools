@@ -64,7 +64,7 @@ jobs:
 
           coverage combine stage
           coverage report --ignore-errors --show-missing --skip-covered
-          coverage json
+          coverage json --ignore-errors
 
           export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
           echo "total=$TOTAL" >> $GITHUB_ENV
