@@ -21,7 +21,7 @@ on:
 
 jobs:
   action_contexts:
-    name: "Display GitHub Action Contexts"
+    name: Execute
     runs-on: ubuntu-latest
 
     steps:
