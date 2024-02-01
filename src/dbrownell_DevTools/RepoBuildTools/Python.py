@@ -356,3 +356,39 @@ def PublishFuncFactory(
     # ----------------------------------------------------------------------
 
     return Publish
+
+
+# ----------------------------------------------------------------------
+def BuildBinaryFuncFactory(
+    source_root: Path,
+    app: typer.Typer,
+    build_filename: str = "build_binary.py",
+) -> Callable:
+    # ----------------------------------------------------------------------
+    @app.command("build_binary", no_args_is_help=False)
+    def BuildBinary(
+        verbose: Annotated[bool, _verbose_typer_option] = False,
+        debug: Annotated[bool, _debug_typer_option] = False,
+    ) -> None:
+        """Builds a python executable using cx_Freeze"""
+
+        with DoneManager.CreateCommandLine(
+            flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
+        ) as dm:
+            with dm.Nested("Building executable...") as build_exe_dm:
+                command_line = "python {} build_exe".format(build_filename)
+
+                build_exe_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
+
+                with build_exe_dm.YieldStream() as stream:
+                    build_exe_dm.result = SubprocessEx.Stream(
+                        command_line,
+                        stream,
+                        cwd=source_root,
+                    )
+                    if build_exe_dm.result != 0:
+                        return
+
+    # ----------------------------------------------------------------------
+
+    return BuildBinary
