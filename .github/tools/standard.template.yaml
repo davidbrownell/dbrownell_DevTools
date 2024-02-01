@@ -44,16 +44,16 @@ jobs:
       python_version: ${{ matrix.python_version }}
 
   # ----------------------------------------------------------------------
-  package_coverage:
+  coverage:
     needs: validate
 
     name: Postprocess Coverage Info
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_package_coverage.yaml@main
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_package_python_coverage.yaml@main
     with:
-      gist_id: "<POPULATE: gist_value>"
-      gist_filename: "<POPULATE: gist filename>"
+      gist_id: <POPULATE: Gist ID>
+      gist_filename: <POPULATE: repo_name>_coverage.json
     secrets: inherit
 
   # ----------------------------------------------------------------------
@@ -84,8 +84,87 @@ jobs:
       python_version: ${{ matrix.python_version }}
 
   # ----------------------------------------------------------------------
-  publish:
+  package_validation:
     needs: package
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+        python_version:
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          # - "3.9"  # Not supported
+          # - "3.8"  # Not supported
+
+    name: Package Validation
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python_package.yaml@main
+    with:
+      operating_system: ${{ matrix.os }}
+      python_version: ${{ matrix.python_version }}
+      package_name: <POPULATE: package_name>
+      validation_command: <POPULATE: validation_command>
+
+  # ----------------------------------------------------------------------
+  binary:
+    needs: validate
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+        python_version:
+          - "3.12"
+
+    name: Binary
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_python_binary.yaml@main
+    with:
+      operating_system: ${{ matrix.os }}
+      python_version: ${{ matrix.python_version }}
+
+  # ----------------------------------------------------------------------
+  binary_validation:
+    needs: binary
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+
+        python_version:
+          - "3.12"
+
+    name: Binary Validation
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python_binary.yaml@main
+    with:
+      operating_system: ${{ matrix.os }}
+      python_version: ${{ matrix.python_version }}
+      binary_name: <POPULATE: binary_name>
+      validation_command: <POPULATE: validation_command>
+
+  # ----------------------------------------------------------------------
+  publish:
+    needs:
+      - package_validation
+      - binary_validation
 
     name: Publish
 

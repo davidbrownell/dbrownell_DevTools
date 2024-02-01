@@ -1,0 +1,64 @@
+# ----------------------------------------------------------------------
+# |
+# |  action.yml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2024-02-01 10:31:00
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2024
+# |  Distributed under the Boost Software License, Version 1.0. See
+# |  accompanying file LICENSE_1_0.txt or copy at
+# |  http://www.boost.org/LICENSE_1_0.txt.
+# |
+# ----------------------------------------------------------------------
+name: "[impl] Validates Python Package"
+description: "Validates a Python package"
+
+inputs:
+  operating_system:
+    required: true
+    type: string
+
+  python_version:
+    required: true
+    type: string
+
+  package_name:
+    required: true
+    type: string
+
+  validation_command:
+    required: true
+    type: string
+
+  shell_name:
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: stage
+        pattern: python_package-${{ inputs.operating_system }}-${{ inputs.python_version }}
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '${{ inputs.python_version }}'
+
+    - name: Install Python Wheel
+      shell: ${{ inputs.shell_name }}
+      run: |
+        # BugBug: Change branch to main
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI3/.github/tools/InstallPythonWheel.py --output InstallPythonWheel.py --no-progress-meter --fail-with-body
+
+        python InstallPythonWheel.py ./stage
+
+    - name: Validate
+      shell: ${{ inputs.shell_name }}
+      run: ${{ inputs.validation_command }}
