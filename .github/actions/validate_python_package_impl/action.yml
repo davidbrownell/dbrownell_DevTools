@@ -54,8 +54,7 @@ runs:
     - name: Install Python Wheel
       shell: ${{ inputs.shell_name }}
       run: |
-        # BugBug: Change branch to main
-        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI3/.github/tools/InstallPythonWheel.py --output InstallPythonWheel.py --no-progress-meter --fail-with-body
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/main/.github/tools/InstallPythonWheel.py --output InstallPythonWheel.py --no-progress-meter --fail-with-body
 
         python InstallPythonWheel.py ./stage
 

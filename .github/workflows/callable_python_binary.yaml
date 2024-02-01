@@ -56,7 +56,7 @@ jobs:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_build_binary_impl@CITemporary # BugBug main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_build_binary_impl@main
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
