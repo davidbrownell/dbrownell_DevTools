@@ -31,7 +31,7 @@ jobs:
   # ----------------------------------------------------------------------
   action_contexts:
     name: "Display GitHub Action Contexts"
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_display_action_contexts.yaml@CITemporary
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_display_action_contexts.yaml@main
 
   # ----------------------------------------------------------------------
   validate:
@@ -53,7 +53,7 @@ jobs:
 
     name: Validate
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python.yaml@CITemporary
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python.yaml@main
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -93,7 +93,7 @@ jobs:
 
     name: Package
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_python_package.yaml@CITemporary
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_python_package.yaml@main
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -120,7 +120,7 @@ jobs:
 
     name: Package Validation
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python_package.yaml@CITemporary
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python_package.yaml@main
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -132,5 +132,5 @@ jobs:
 
     name: Publish
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_publish_python.yaml@CITemporary
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_publish_python.yaml@main
     secrets: inherit
