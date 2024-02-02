@@ -69,7 +69,7 @@ runs:
     - name: Create Archive
       shell: ${{ inputs.shell_name }}
       run: |
-        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CITemporary/.github/tools/CreatePythonBinaryArchive.py --output CreatePythonBinaryArchive.py --no-progress-meter --fail-with-body
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/main/.github/tools/CreatePythonBinaryArchive.py --output CreatePythonBinaryArchive.py --no-progress-meter --fail-with-body
 
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
         python CreatePythonBinaryArchive.py archive

@@ -66,7 +66,7 @@ jobs:
 
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_code_changes.outputs.src == 'true' }}
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CITemporary
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@main
         with:
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}
