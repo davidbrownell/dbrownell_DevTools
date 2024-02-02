@@ -25,10 +25,6 @@ inputs:
     required: true
     type: string
 
-  package_name:
-    required: true
-    type: string
-
   validation_command:
     required: true
     type: string
@@ -46,6 +42,27 @@ runs:
         path: stage
         pattern: python_binary-${{ inputs.operating_system }}-${{ inputs.python_version }}
 
-    # TODO: - name: Validate
-    # TODO:   shell: ${{ inputs.shell_name }}
-    # TODO:   run: ${{ inputs.validation_command }}
+    - name: Validate (Windows)
+      if: ${{ startsWith(inputs.operating_system, 'windows') }}
+      shell: ${{ inputs.shell_name }}
+      run: |
+        for /r stage %%F in (exe.*-${{ inputs.python_version }}.zip) do (
+            echo Expanding "%%F"...
+            PowerShell -Command "Expand-Archive -Path '%%F' -DestinationPath ."
+            echo.
+            echo.
+
+            ${{ inputs.validation_command }}
+        )
+
+    - name: Validate (Standard)
+      if: ${{ ! startsWith(inputs.operating_system, 'windows') }}
+      shell: ${{ inputs.shell_name }}
+      run: |
+        archive_filename=$(find ./stage -name "exe.*-${{ inputs.python_version }}.tar.gz")
+
+        tar --extract --file "${archive_filename}" --gunzip --verbose
+        echo ""
+        echo ""
+
+        ./${{ inputs.validation_command }}
