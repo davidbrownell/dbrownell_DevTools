@@ -25,10 +25,6 @@ inputs:
     required: true
     type: string
 
-  package_name:
-    required: true
-    type: string
-
   validation_command:
     required: true
     type: string
@@ -51,13 +47,11 @@ runs:
       with:
         python-version: '${{ inputs.python_version }}'
 
-    - name: Install Python Wheel
+    - name: Install and Validate
       shell: ${{ inputs.shell_name }}
       run: |
         curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/main/.github/tools/InstallPythonWheel.py --output InstallPythonWheel.py --no-progress-meter --fail-with-body
 
         python InstallPythonWheel.py ./stage
 
-    - name: Validate
-      shell: ${{ inputs.shell_name }}
-      run: ${{ inputs.validation_command }}
+        ${{ inputs.validation_command }}

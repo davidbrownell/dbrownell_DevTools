@@ -27,10 +27,6 @@ on:
         required: true
         type: string
 
-      binary_name:
-        required: true
-        type: string
-
       validation_command:
         required: true
         type: string
@@ -47,11 +43,10 @@ jobs:
         with:
           operating_system: ${{ inputs.operating_system }}
 
-      - name: Validate Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_binary_impl@main
+      - name: Validate Binary
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_binary_impl@CITemporary
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
-          package_name: ${{ inputs.package_name }}
           validation_command: ${{ inputs.validation_command }}
           shell_name: ${{ steps.initialize.outputs.shell_name }}

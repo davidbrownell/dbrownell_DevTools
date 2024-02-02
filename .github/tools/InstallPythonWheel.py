@@ -29,7 +29,6 @@ if len(sys.argv) != 2:
     raise Exception("Usage: {} <search_directory>".format(sys.argv[0]))
 
 search_directory = Path(sys.argv[1])
-
 if not search_directory.is_dir():
     raise Exception("'{}' is not a valid directory.".format(search_directory))
 

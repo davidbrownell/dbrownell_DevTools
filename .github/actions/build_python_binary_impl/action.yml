@@ -65,8 +65,18 @@ runs:
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
         python Build.py build_binary --verbose
 
-    - name: Upload
+    # Note that we have to create the archive to preserve execute permissions (see https://github.com/actions/upload-artifact/issues/38 for more info)
+    - name: Create Archive
+      shell: ${{ inputs.shell_name }}
+      run: |
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CITemporary/.github/tools/CreatePythonBinaryArchive.py --output CreatePythonBinaryArchive.py --no-progress-meter --fail-with-body
+
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+        python CreatePythonBinaryArchive.py archive
+
+    - name: Upload Archive
       uses: actions/upload-artifact@v4
       with:
         name: "python_binary-${{ inputs.operating_system }}-${{ inputs.python_version }}"
-        path: build/
+        path: archive
+        compression-level: 0

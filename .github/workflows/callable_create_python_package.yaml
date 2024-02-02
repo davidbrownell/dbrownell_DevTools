@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------
 # |
-# |  callable_python_package.yaml
+# |  callable_create_python_package.yaml
 # |
 # |  David Brownell <db@DavidBrownell.com>
 # |      2024-01-27 10:59:54
@@ -56,7 +56,7 @@ jobs:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_package_impl@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/package_python_impl@CITemporary
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}

@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------------
 # |
-# |  callable_python_validate.yaml
+# |  callable_publish_python.yaml
 # |
 # |  David Brownell <db@DavidBrownell.com>
-# |      2024-01-27 10:50:29
+# |      2024-01-27 10:27:57
 # |
 # ----------------------------------------------------------------------
 # |
@@ -13,56 +13,64 @@
 # |  http://www.boost.org/LICENSE_1_0.txt.
 # |
 # ----------------------------------------------------------------------
-name: "[impl] Validates Python changes"
+name: "[impl] Publishes Python Packages"
 run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
 
 on:
   workflow_call:
-    inputs:
-      operating_system:
+    secrets:
+      PYPI_TOKEN:
         required: true
-        type: string
-
-      python_version:
-        required: true
-        type: string
 
 jobs:
-  validate:
+  publish:
     name: Execute
-    runs-on: ${{ inputs.operating_system }}
+    runs-on: ubuntu-latest
 
     env:
       COLUMNS: "200"
       SIMULATE_TERMINAL_CAPABILITIES_SUPPORTS_COLORS: "1"
       PYTHONIOENCODING: "UTF-8"
-      COVERAGE_FILE: .coverage.${{ inputs.operating_system }}.${{ inputs.python_version }}
+      GH_TOKEN: ${{ github.token }}
 
     steps:
       # Ensure that windows machines support long paths
       - name: git Long File Path Support on Windows
-        if: ${{ startsWith(inputs.operating_system, 'windows') }}
+        if: ${{ startsWith(inputs.operating_system, 'windows') && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
           git config --system core.longpaths true
 
       - name: "Checkout Source"
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Has Source Changes?
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        uses: dorny/paths-filter@v3
+        id: has_code_changes
+        with:
+          filters: |
+            src:
+              - 'src/**'
+              - 'pyproject.toml'
+              - 'README.md'
+
       - name: Initialize
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_code_changes.outputs.src == 'true' }}
         id: Initialize
         uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
         with:
           operating_system: ${{ inputs.operating_system }}
 
-      - name: Validate
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/python_validate_impl@main
+      - name: Publish
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_code_changes.outputs.src == 'true' }}
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CITemporary
         with:
-          operating_system: ${{ inputs.operating_system }}
-          python_version: ${{ inputs.python_version }}
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}
           shell_name: ${{ steps.initialize.outputs.shell_name }}
           source_command: ${{ steps.initialize.outputs.source_command }}
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
