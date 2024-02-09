@@ -17,12 +17,14 @@
 
 import os
 import re
+import shutil
 
 from pathlib import Path
 from typing import Annotated
 
 import typer
 
+from dbrownell_Common.InflectEx import inflect  # type: ignore [import-untyped]
 from dbrownell_Common.Streams.DoneManager import DoneManager, Flags as DoneManagerFlags  # type: ignore [import-untyped]
 from dbrownell_Common import SubprocessEx  # type: ignore [import-untyped]
 from typer.core import TyperGroup
@@ -71,47 +73,66 @@ def CreateArchive(
                 root_path = Path(root)
 
                 for directory in directories:
+                    fullpath = root_path / directory
+
                     match = regex.match(directory)
                     if match:
-                        all_directories.append(root_path / directory)
+                        all_directories.append(fullpath)
+                    else:
+                        children = list(fullpath.iterdir())
+
+                        # Are we looking at the scenario where we have multiple binaries? If so,
+                        # rename the exe directory so that it includes the name of the binary.
+                        if (
+                            len(children) == 1
+                            and children[0].is_dir()
+                            and regex.match(children[0].name)
+                        ):
+                            renamed_directory = root_path / "{}-{}".format(
+                                directory, children[0].name
+                            )
+
+                            shutil.move(children[0], renamed_directory)
+                            all_directories.append(renamed_directory)
 
             if not all_directories:
                 collect_dm.WriteError("No directories were found.\n")
                 return
 
-            if len(all_directories) > 1:
-                collect_dm.WriteError(
-                    "{} directories were found, but only 1 was expected.\n".format(
-                        len(all_directories)
-                    )
-                )
-                return
-
-        with dm.Nested("Creating archive...") as archive_dm:
-            source_dir = all_directories[0]
-
+        with dm.Nested(
+            "Creating {}...".format(inflect.no("archive", len(all_directories)))
+        ) as archive_dm:
             if os.name == "nt":
-                command_line = r'PowerShell -Command "Compress-Archive -Path {}\* -DestinationPath {}.zip"'.format(
-                    source_dir, output_dir / source_dir.parts[-1]
-                )
+                command_line_template = r'PowerShell -Common "Compress-Archive -Path {src}\* -DestinationPath {dst}.zip"'
             else:
-                command_line = 'tar --create "--file={}.tar.gz" --gzip --verbose *'.format(
-                    output_dir / source_dir.parts[-1]
-                )
-
-            archive_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
+                command_line_template = 'tar --create "--file={dst}.tar.gz" --gzip --verbose *'
 
             output_dir.mkdir(parents=True, exist_ok=True)
 
-            with archive_dm.YieldStream() as stream:
-                archive_dm.result = SubprocessEx.Stream(
-                    command_line,
-                    stream,
-                    cwd=source_dir,
-                )
+            for index, source_dir in enumerate(all_directories):
+                with archive_dm.Nested(
+                    "Processing '{}' ({} of {})...".format(
+                        source_dir.name,
+                        index + 1,
+                        len(all_directories),
+                    )
+                ) as this_dm:
+                    command_line = command_line_template.format(
+                        src=source_dir,
+                        dst=output_dir / source_dir.parts[-1],
+                    )
 
-                if archive_dm.result != 0:
-                    return
+                    this_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
+
+                    with this_dm.YieldStream() as stream:
+                        this_dm.result = SubprocessEx.Stream(
+                            command_line,
+                            stream,
+                            cwd=source_dir,
+                        )
+
+                        if this_dm.result != 0:
+                            return
 
 
 # ----------------------------------------------------------------------

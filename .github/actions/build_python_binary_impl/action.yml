@@ -17,6 +17,14 @@ name: "[impl] Build Binary"
 description: "Builds a binary within the current repository"
 
 inputs:
+  build_description:
+    required: true
+    type: string
+
+  build_command_line:
+    required: true
+    type: string
+
   operating_system:
     required: true
     type: string
@@ -59,11 +67,11 @@ runs:
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
         python Build.py update_version --verbose
 
-    - name: Build Binary
+    - name: ${{ inputs.build_description }}
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py build_binary --verbose
+        ${{ inputs.build_command_line }}
 
     # Note that we have to create the archive to preserve execute permissions (see https://github.com/actions/upload-artifact/issues/38 for more info)
     - name: Create Archive
