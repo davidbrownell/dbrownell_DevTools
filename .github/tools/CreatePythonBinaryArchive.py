@@ -103,7 +103,7 @@ def CreateArchive(
             "Creating {}...".format(inflect.no("archive", len(all_directories)))
         ) as archive_dm:
             if os.name == "nt":
-                command_line_template = r'PowerShell -Common "Compress-Archive -Path {src}\* -DestinationPath {dst}.zip"'
+                command_line_template = r'PowerShell -Command "Compress-Archive -Path {src}\* -DestinationPath {dst}.zip"'
             else:
                 command_line_template = 'tar --create "--file={dst}.tar.gz" --gzip --verbose *'
 
