@@ -33,6 +33,10 @@ inputs:
     required: true
     type: string
 
+  binary_prefix:
+    required: false
+    type: string
+
 runs:
   using: composite
   steps:
@@ -46,7 +50,7 @@ runs:
       if: ${{ startsWith(inputs.operating_system, 'windows') }}
       shell: ${{ inputs.shell_name }}
       run: |
-        for /r stage %%F in (exe.*-${{ inputs.python_version }}.zip) do (
+        for /r stage %%F in (${{ inputs.binary_prefix }}exe.*-${{ inputs.python_version }}.zip) do (
             echo Expanding "%%F"...
             PowerShell -Command "Expand-Archive -Path '%%F' -DestinationPath ."
             echo.
@@ -59,7 +63,7 @@ runs:
       if: ${{ ! startsWith(inputs.operating_system, 'windows') }}
       shell: ${{ inputs.shell_name }}
       run: |
-        archive_filename=$(find ./stage -name "exe.*-${{ inputs.python_version }}.tar.gz")
+        archive_filename=$(find ./stage -name "${{ inputs.binary_prefix }}exe.*-${{ inputs.python_version }}.tar.gz")
 
         tar --extract --file "${archive_filename}" --gunzip --verbose
         echo ""

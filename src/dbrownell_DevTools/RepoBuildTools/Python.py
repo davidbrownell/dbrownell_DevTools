@@ -16,7 +16,9 @@
 """Implement tasks used when working with Python repositories."""
 
 import re
+import shutil
 
+from enum import Enum
 from pathlib import Path
 from typing import Annotated, Callable, Optional
 
@@ -361,8 +363,8 @@ def PublishFuncFactory(
 # ----------------------------------------------------------------------
 def BuildBinaryFuncFactory(
     source_root: Path,
+    build_filename: Path,
     app: typer.Typer,
-    build_filename: str = "build_binary.py",
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("build_binary", no_args_is_help=False)
@@ -370,25 +372,99 @@ def BuildBinaryFuncFactory(
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
     ) -> None:
-        """Builds a python executable using cx_Freeze"""
+        """Builds a python executable using cx_Freeze."""
 
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
-            with dm.Nested("Building executable...") as build_exe_dm:
-                command_line = "python {} build_exe".format(build_filename)
-
-                build_exe_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
-
-                with build_exe_dm.YieldStream() as stream:
-                    build_exe_dm.result = SubprocessEx.Stream(
-                        command_line,
-                        stream,
-                        cwd=source_root,
-                    )
-                    if build_exe_dm.result != 0:
-                        return
+            _BuildBinary(
+                dm,
+                build_filename,
+                source_root / "build",
+            )
 
     # ----------------------------------------------------------------------
 
     return BuildBinary
+
+
+# ----------------------------------------------------------------------
+def BuildBinariesFuncFactory(
+    source_root: Path,
+    build_filenames: dict[str, Path],
+    app: typer.Typer,
+) -> Callable:
+    # Create an enumeration of the build names
+    enum_type = Enum("BuildNames", {item: item for item in build_filenames})
+
+    # ----------------------------------------------------------------------
+    @app.command("build_binaries", no_args_is_help=False)
+    def BuildBinaries(
+        binary_names: Annotated[
+            Optional[list[enum_type]], typer.Argument(help="The name of the binary to build.")
+        ] = None,
+        verbose: Annotated[bool, _verbose_typer_option] = False,
+        debug: Annotated[bool, _debug_typer_option] = False,
+    ) -> None:
+        """Builds a python executable using cx_Freeze."""
+
+        binary_names = binary_names or list(enum_type)
+
+        with DoneManager.CreateCommandLine(
+            flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
+        ) as dm:
+            for index, build_enum in enumerate(binary_names):
+                build_name = build_enum.name
+                build_filename = build_filenames[build_name]
+
+                with dm.Nested(
+                    "Building '{}' ({} of {})...".format(build_name, index + 1, len(binary_names)),
+                    suffix="\n",
+                ) as this_dm:
+                    _BuildBinary(
+                        this_dm,
+                        build_filename,
+                        source_root / "build" / build_name,
+                    )
+
+                    if this_dm.result != 0:
+                        return
+
+    # ----------------------------------------------------------------------
+
+    return BuildBinaries
+
+
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
+def _BuildBinary(
+    dm: DoneManager,
+    build_filename: Path,
+    output_dir: Path,
+) -> None:
+    with dm.Nested("Building executable...") as build_exe_dm:
+        command_line = "python {} build_exe".format(build_filename.name)
+
+        build_exe_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
+
+        with build_exe_dm.YieldStream() as stream:
+            build_exe_dm.result = SubprocessEx.Stream(
+                command_line,
+                stream,
+                cwd=build_filename.parent,
+            )
+            if build_exe_dm.result != 0:
+                return
+
+    if output_dir.is_dir():
+        with dm.Nested("Removing previous build directory..."):
+            shutil.rmtree(output_dir)
+
+    output_dir.parent.mkdir(parents=True, exist_ok=True)
+    with dm.Nested("Moving files..."):
+        shutil.copytree(
+            PathEx.EnsureDir(build_filename.parent / "build"),
+            output_dir,
+            copy_function=shutil.move,
+        )

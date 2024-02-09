@@ -64,6 +64,7 @@ runs:
         python OrganizePythonArtifacts.py ./stage ./dist
 
         echo "python_version=$(cat ./dist/__version__)" >> $GITHUB_OUTPUT
+        rm ./dist/__version__
 
     - name: Publish
       shell: ${{ inputs.shell_name }}
