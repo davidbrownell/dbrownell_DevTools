@@ -13,6 +13,7 @@
 # ----------------------------------------------------------------------
 """Implement tasks used when working with Python repositories."""
 
+import os
 import re
 import shutil
 
@@ -21,6 +22,7 @@ from pathlib import Path
 from typing import Annotated, Callable, Optional
 
 from AutoGitSemVer.Lib import GetSemanticVersion  # type: ignore [import-untyped]
+from dbrownell_Common.InflectEx import inflect  # type: ignore [import-untyped]
 from dbrownell_Common import PathEx  # type: ignore [import-untyped]
 from dbrownell_Common.Streams.DoneManager import (  # type: ignore [import-untyped]
     DoneManager,
@@ -441,18 +443,44 @@ def _BuildBinary(
     build_filename: Path,
     output_dir: Path,
 ) -> None:
-    with dm.Nested("Building executable...") as build_exe_dm:
-        command_line = "python {} build_exe".format(build_filename.name)
+    with dm.Nested("Building binary...") as build_dm:
+        build_dir = build_filename.parent / "build"
 
-        build_exe_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
+        with build_dm.Nested("Building executable...") as build_exe_dm:
+            command_line = "python {} build_exe".format(build_filename.name)
 
-        with build_exe_dm.YieldStream() as stream:
-            build_exe_dm.result = SubprocessEx.Stream(
-                command_line,
-                stream,
-                cwd=build_filename.parent,
-            )
+            build_exe_dm.WriteVerbose("Command Line: {}\n\n".format(command_line))
+
+            with build_exe_dm.YieldStream() as stream:
+                build_exe_dm.result = SubprocessEx.Stream(
+                    command_line,
+                    stream,
+                    cwd=build_filename.parent,
+                )
+
             if build_exe_dm.result != 0:
+                return
+
+        PathEx.EnsureDir(build_dir)
+
+        empty_directories_removed = 0
+
+        with build_dm.Nested(
+            "Removing empty directories...",
+            lambda: "{} removed".format(inflect.no("directory", empty_directories_removed)),
+        ) as prune_dm:
+            directories: list[Path] = []
+
+            for root, _, _ in os.walk(build_dir):
+                directories.append(Path(root))
+
+            for directory in reversed(directories):
+                if not any(item for item in directory.iterdir()):
+                    with prune_dm.VerboseNested("Removing '{}'...".format(directory)):
+                        shutil.rmtree(directory)
+                        empty_directories_removed += 1
+
+            if prune_dm.result != 0:
                 return
 
     if output_dir.is_dir():
@@ -462,7 +490,9 @@ def _BuildBinary(
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     with dm.Nested("Moving files..."):
         shutil.copytree(
-            PathEx.EnsureDir(build_filename.parent / "build"),
+            build_dir,
             output_dir,
             copy_function=shutil.move,
         )
+
+    shutil.rmtree(build_dir)
