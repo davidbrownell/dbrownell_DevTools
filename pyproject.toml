@@ -70,7 +70,9 @@ dynamic = [
 readme = "README.md"
 
 [project.optional-dependencies]
-dev = []
+dev = [
+    "cx_Freeze == 6.*",
+]
 
 package = [
     "build == 1.*",
