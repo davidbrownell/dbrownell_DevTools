@@ -1,0 +1,72 @@
+# ----------------------------------------------------------------------
+# |
+# |  action.yml
+# |
+# |  David Brownell <db@DavidBrownell.com>
+# |      2024-02-15 13:05:27
+# |
+# ----------------------------------------------------------------------
+# |
+# |  Copyright David Brownell 2024
+# |  Distributed under the MIT License.
+# |
+# ----------------------------------------------------------------------
+name: "[impl] Create Docker Image"
+description: "Creates a Docker image within the current repository"
+
+inputs:
+  name_suffix:
+    required: true
+    type: string
+
+  bootstrap_args:
+    required: true
+    type: string
+
+  operating_system:
+    required: true
+    type: string
+
+  python_version:
+    required: true
+    type: string
+
+  script_prefix:
+    required: true
+    type: string
+
+  script_extension:
+    required: true
+    type: string
+
+  shell_name:
+    required: true
+    type: string
+
+  source_command:
+    required: true
+    type: string
+
+  compressed_extension:
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Bootstrap
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.script_prefix }}Bootstrap${{ inputs.script_extension }} --python-version ${{ inputs.python_version }} --package
+
+    - name: Create Docker Image
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+        python Build.py create_docker_image --name-suffix "${{ inputs.name_suffix }}" --bootstrap-args "${{ inputs.bootstrap_args }}" --verbose
+
+    - name: Upload
+      uses: actions/upload-artifact@v4
+      with:
+        name: "docker_image-${{ inputs.operating_system }}-${{ inputs.python_version }}"
+        path: docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}

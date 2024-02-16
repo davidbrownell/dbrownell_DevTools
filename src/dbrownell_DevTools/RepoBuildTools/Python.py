@@ -43,7 +43,7 @@ _debug_typer_option = typer.Option("--debug", help="Write debug information to t
 # |
 # ----------------------------------------------------------------------
 def BlackFuncFactory(
-    source_root: Path,
+    repo_root: Path,  # given /src/<package_name>, repo_root is /
     app: typer.Typer,
 ) -> Callable:
     # ----------------------------------------------------------------------
@@ -66,7 +66,7 @@ def BlackFuncFactory(
         ) as dm:
             PythonBuildActivities.Black(
                 dm,
-                source_root,
+                repo_root,
                 format_sources=format,
             )
 
@@ -77,7 +77,7 @@ def BlackFuncFactory(
 
 # ----------------------------------------------------------------------
 def PylintFuncFactory(
-    source_root: Path,
+    package_root: Path,  # given /src/<package_name>, package_root is /src/<package_name>
     app: typer.Typer,
     default_min_score: float = 9.5,
 ) -> Callable:
@@ -103,7 +103,7 @@ def PylintFuncFactory(
         ) as dm:
             PythonBuildActivities.Pylint(
                 dm,
-                source_root,
+                package_root,
                 min_score,
             )
 
@@ -114,7 +114,7 @@ def PylintFuncFactory(
 
 # ----------------------------------------------------------------------
 def PytestFuncFactory(
-    test_root: Path,
+    test_root: Path,  # given /src/<package_name> and /tests, test_root is /tests
     cov_name: str,
     app: typer.Typer,
     default_min_coverage: float = 95.0,
@@ -159,7 +159,7 @@ def PytestFuncFactory(
 
 # ----------------------------------------------------------------------
 def UpdateVersionFuncFactory(
-    source_root: Path,
+    source_root: Path,  # given /src/<package_name>, source_root is /src
     init_filename: Path,
     app: typer.Typer,
 ) -> Callable:
@@ -207,7 +207,7 @@ def UpdateVersionFuncFactory(
 
 # ----------------------------------------------------------------------
 def PackageFuncFactory(
-    source_root: Path,
+    repo_root: Path,  # given /src/<package_name>, repo_root is /
     app: typer.Typer,
 ) -> Callable:
     # ----------------------------------------------------------------------
@@ -227,7 +227,7 @@ def PackageFuncFactory(
         ) as dm:
             PythonBuildActivities.Package(
                 dm,
-                source_root,
+                repo_root,
                 additional_args,
             )
 
@@ -238,7 +238,7 @@ def PackageFuncFactory(
 
 # ----------------------------------------------------------------------
 def PublishFuncFactory(
-    source_root: Path,
+    repo_root: Path,  # given /src/<package_name>, repo_root is /
     app: typer.Typer,
 ) -> Callable:
     # ----------------------------------------------------------------------
@@ -264,7 +264,7 @@ def PublishFuncFactory(
         ) as dm:
             PythonBuildActivities.Publish(
                 dm,
-                source_root,
+                repo_root,
                 pypi_api_token,
                 production=production,
             )
@@ -276,7 +276,7 @@ def PublishFuncFactory(
 
 # ----------------------------------------------------------------------
 def BuildBinaryFuncFactory(
-    source_root: Path,
+    repo_root: Path,  # given /src/<package_name>, repo_root is /
     build_filename: Path,
     app: typer.Typer,
 ) -> Callable:
@@ -294,7 +294,7 @@ def BuildBinaryFuncFactory(
             PythonBuildActivities.BuildBinary(
                 dm,
                 build_filename,
-                source_root / "build",
+                repo_root / "build",
             )
 
     # ----------------------------------------------------------------------
@@ -304,7 +304,7 @@ def BuildBinaryFuncFactory(
 
 # ----------------------------------------------------------------------
 def BuildBinariesFuncFactory(
-    source_root: Path,
+    repo_root: Path,  # given /src/<package_name>, repo_root is /
     build_filenames: dict[str, Path],
     app: typer.Typer,
 ) -> Callable:
@@ -338,12 +338,59 @@ def BuildBinariesFuncFactory(
                     PythonBuildActivities.BuildBinary(
                         this_dm,
                         build_filename,
-                        source_root / "build" / build_name,
+                        repo_root / "build" / build_name,
                     )
-
-                    if this_dm.result != 0:
-                        return
 
     # ----------------------------------------------------------------------
 
     return BuildBinaries
+
+
+# ----------------------------------------------------------------------
+def CreateDockerImageFuncFactory(
+    repo_root: Path,  # Given /src/<package_name>, repo_root is /
+    app: typer.Typer,
+    create_base_image_func: Optional[BuildActivities.CreateBaseImageFunc] = None,
+    default_bootstrap_args: str = "--package",
+) -> Callable:
+    # ----------------------------------------------------------------------
+    @app.command("create_docker_image", no_args_is_help=False)
+    def CreateDockerImage(
+        name_suffix: Annotated[
+            Optional[str],
+            typer.Option(
+                "--name-suffix",
+                help="Suffix to apply to the generated image name",
+            ),
+        ] = None,
+        bootstrap_args: Annotated[
+            Optional[str],
+            typer.Option(
+                "--bootstrap-args",
+                help="Additional arguments passed to the bootstrap command.",
+            ),
+        ] = None,
+        verbose: Annotated[bool, _verbose_typer_option] = False,
+        debug: Annotated[bool, _debug_typer_option] = False,
+    ) -> None:
+        """Creates a docker image for the repository."""
+
+        with DoneManager.CreateCommandLine(
+            flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
+        ) as dm:
+            final_bootstrap_args = default_bootstrap_args
+
+            if bootstrap_args:
+                final_bootstrap_args += f" {bootstrap_args}"
+
+            BuildActivities.CreateDockerImage(
+                dm,
+                repo_root,
+                create_base_image_func,
+                final_bootstrap_args,
+                name_suffix or None,
+            )
+
+    # ----------------------------------------------------------------------
+
+    return CreateDockerImage

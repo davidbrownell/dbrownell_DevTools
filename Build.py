@@ -19,8 +19,10 @@ from pathlib import Path
 
 import typer
 
-from dbrownell_DevTools.RepoBuildTools import Python as RepoBuildTools
+from dbrownell_Common import PathEx  # type: ignore[import-untyped]
 from typer.core import TyperGroup
+
+from dbrownell_DevTools.RepoBuildTools import Python as RepoBuildTools  # type: ignore[import-untyped]
 
 
 # ----------------------------------------------------------------------
@@ -42,27 +44,27 @@ app = typer.Typer(
 
 
 # ----------------------------------------------------------------------
-this_dir = Path(__file__).parent
-assert this_dir.is_dir(), this_dir
-
-src_dir = this_dir / "src" / "dbrownell_DevTools"
-assert src_dir.is_dir(), src_dir
-
-tests_dir = this_dir / "tests"
-assert tests_dir.is_dir(), tests_dir
+this_dir = PathEx.EnsureDir(Path(__file__).parent)
+src_dir = PathEx.EnsureDir(this_dir / "src" / "dbrownell_DevTools")
+tests_dir = PathEx.EnsureDir(this_dir / "tests")
 
 
 # ----------------------------------------------------------------------
 Black = RepoBuildTools.BlackFuncFactory(this_dir, app)
 Pylint = RepoBuildTools.PylintFuncFactory(src_dir, app)
 Pytest = RepoBuildTools.PytestFuncFactory(
-    tests_dir, "dbrownell_DevTools", app, default_min_coverage=40.0
+    tests_dir,
+    "dbrownell_DevTools",
+    app,
+    default_min_coverage=60.0,
 )
 UpdateVersion = RepoBuildTools.UpdateVersionFuncFactory(
     src_dir.parent, src_dir / "__init__.py", app
 )
 Package = RepoBuildTools.PackageFuncFactory(this_dir, app)
 Publish = RepoBuildTools.PublishFuncFactory(this_dir, app)
+
+CreateDockerImage = RepoBuildTools.CreateDockerImageFuncFactory(this_dir, app)
 
 
 # ----------------------------------------------------------------------
