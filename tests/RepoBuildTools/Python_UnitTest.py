@@ -39,8 +39,30 @@ def test_Black():
     assert result.stdout == ""
     assert len(args) == 2
     assert args[1] == Path.cwd()
-    assert len(kwargs) == 1
+    assert len(kwargs) == 2
     assert kwargs["format_sources"] == False
+    assert kwargs["args"] is None
+
+
+# ----------------------------------------------------------------------
+def test_BlackWithArgs():
+    app = typer.Typer()
+
+    BlackFuncFactory(Path.cwd(), app, "1 2 3")
+
+    result, args, kwargs = _PatchFunction(
+        "Black",
+        app,
+        ["--args", "four five six"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout == ""
+    assert len(args) == 2
+    assert args[1] == Path.cwd()
+    assert len(kwargs) == 2
+    assert kwargs["format_sources"] == False
+    assert kwargs["args"] == "1 2 3 four five six"
 
 
 # ----------------------------------------------------------------------
@@ -60,7 +82,29 @@ def test_Pylint():
     assert len(args) == 3
     assert args[1] == Path.cwd()
     assert args[2] == 10.0
-    assert not kwargs
+    assert len(kwargs) == 1
+    assert kwargs["args"] is None
+
+
+# ----------------------------------------------------------------------
+def test_PylintWithArgs():
+    app = typer.Typer()
+
+    PylintFuncFactory(Path.cwd(), app, 10.0, "1 2 3")
+
+    result, args, kwargs = _PatchFunction(
+        "Pylint",
+        app,
+        ["--args", "four five six"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout == ""
+    assert len(args) == 3
+    assert args[1] == Path.cwd()
+    assert args[2] == 10.0
+    assert len(kwargs) == 1
+    assert kwargs["args"] == "1 2 3 four five six"
 
 
 # ----------------------------------------------------------------------
@@ -77,14 +121,38 @@ def test_Pytest():
 
     assert result.exit_code == 0
     assert result.stdout == ""
-    assert len(args) == 5
+    assert len(args) == 4
     assert args[1] == Path.cwd()
     assert args[2] == "foo"
     assert args[3] is None  # min_coverage
-    assert args[4] is None  # pytest args
-    assert len(kwargs) == 2
+    assert len(kwargs) == 3
     assert kwargs["code_coverage"] is False
     assert kwargs["run_benchmarks"] is False
+    assert kwargs["args"] is None
+
+
+# ----------------------------------------------------------------------
+def test_PytestWithArgs():
+    app = typer.Typer()
+
+    PytestFuncFactory(Path.cwd(), "foo", app, additional_args="1 2 3")
+
+    result, args, kwargs = _PatchFunction(
+        "Pytest",
+        app,
+        ["--args", "four five six"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout == ""
+    assert len(args) == 4
+    assert args[1] == Path.cwd()
+    assert args[2] == "foo"
+    assert args[3] is None  # min_coverage
+    assert len(kwargs) == 3
+    assert kwargs["code_coverage"] is False
+    assert kwargs["run_benchmarks"] is False
+    assert kwargs["args"] == "1 2 3 four five six"
 
 
 # ----------------------------------------------------------------------
@@ -122,10 +190,30 @@ def test_Package():
 
     assert result.exit_code == 0
     assert result.stdout == ""
-    assert len(args) == 3
+    assert len(args) == 2
     assert args[1] == Path.cwd()
-    assert args[2] is None  # additional_args
-    assert not kwargs
+    assert len(kwargs) == 1
+    assert kwargs["args"] is None
+
+
+# ----------------------------------------------------------------------
+def test_PackageWithArgs():
+    app = typer.Typer()
+
+    PackageFuncFactory(Path.cwd(), app, "1 2 3")
+
+    result, args, kwargs = _PatchFunction(
+        "Package",
+        app,
+        ["--args", "four five six"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout == ""
+    assert len(args) == 2
+    assert args[1] == Path.cwd()
+    assert len(kwargs) == 1
+    assert kwargs["args"] == "1 2 3 four five six"
 
 
 # ----------------------------------------------------------------------
@@ -145,8 +233,31 @@ def test_Publish():
     assert len(args) == 3
     assert args[1] == Path.cwd()
     assert args[2] == "<token>"
-    assert len(kwargs) == 1
+    assert len(kwargs) == 2
     assert kwargs["production"] is False
+    assert kwargs["args"] is None
+
+
+# ----------------------------------------------------------------------
+def test_PublishWithArgs():
+    app = typer.Typer()
+
+    PublishFuncFactory(Path.cwd(), app, "1 2 3")
+
+    result, args, kwargs = _PatchFunction(
+        "Publish",
+        app,
+        ["<token>", "--args", "four five six"],
+    )
+
+    assert result.exit_code == 0
+    assert result.stdout == ""
+    assert len(args) == 3
+    assert args[1] == Path.cwd()
+    assert args[2] == "<token>"
+    assert len(kwargs) == 2
+    assert kwargs["production"] is False
+    assert kwargs["args"] == "1 2 3 four five six"
 
 
 # ----------------------------------------------------------------------

@@ -31,13 +31,15 @@ def Black(
     source_root: Path,
     *,
     format_sources: bool = False,
+    args: Optional[str] = None,
 ) -> None:
     """Runs black on the python code"""
 
     with dm.Nested("Running black...") as black_dm:
-        command_line = 'black {}{}"{}"'.format(
+        command_line = 'black {}{}{}"{}"'.format(
             "" if format_sources else "--check ",
             "--verbose " if black_dm.is_verbose else "",
+            f"{args} " if args else "",
             source_root,
         )
 
@@ -52,13 +54,16 @@ def Pylint(
     dm: DoneManager,
     source_root: Path,
     min_score: float = 9.5,
+    *,
+    args: Optional[str] = None,
 ) -> None:
     """Runs pylint on the python code"""
 
     with dm.Nested("Running pylint...") as pylint_dm:
-        command_line = 'pylint --fail-under={} {}"{}"'.format(
+        command_line = 'pylint --fail-under={} {}{}"{}"'.format(
             min_score,
             "--verbose " if pylint_dm.is_verbose else "",
+            f"{args} " if args else "",
             source_root,
         )
 
@@ -74,8 +79,8 @@ def Pytest(
     test_root: Path,
     python_package_name: str,
     min_coverage: Optional[float] = None,
-    pytest_args: Optional[str] = None,
     *,
+    args: Optional[str] = None,
     code_coverage: bool = False,
     run_benchmarks: bool = False,
 ) -> None:
@@ -89,7 +94,7 @@ def Pytest(
             "--benchmark-skip " if not run_benchmarks else "",
             f"--cov={python_package_name} " if code_coverage else "",
             f"--cov-fail-under={min_coverage} " if min_coverage is not None else "",
-            pytest_args or "",
+            args or "",
         )
 
         pytest_dm.WriteVerbose(f"Command Line: {command_line}\n\n")
@@ -106,12 +111,12 @@ def Pytest(
 def Package(
     dm: DoneManager,
     source_root: Path,
-    additional_args: Optional[str] = None,
+    args: Optional[str] = None,
 ) -> None:
     """Builds a python package"""
 
     with dm.Nested("Packaging...") as package_dm:
-        command_line = "python -m build {}".format(additional_args or "")
+        command_line = "python -m build {}".format(args or "")
 
         package_dm.WriteVerbose(f"Command Line: {command_line}\n\n")
 
@@ -130,6 +135,7 @@ def Publish(
     pypi_api_token: str,
     *,
     production: bool = False,
+    args: Optional[str] = None,
 ) -> None:
     """Publishes a python package"""
 
@@ -148,10 +154,11 @@ def Publish(
         repository_url = "https://test.PyPi.org/legacy/"
 
     with dm.Nested("Publishing to '{}'...".format(repository_url)) as publish_dm:
-        command_line = 'twine upload --repository-url {} --username __token__ --password {} --non-interactive --disable-progress-bar {} "dist/*.whl"'.format(
+        command_line = 'twine upload --repository-url {} --username __token__ --password {} --non-interactive --disable-progress-bar {} {}"dist/*.whl"'.format(
             repository_url,
             pypi_api_token,
             "--verbose" if publish_dm.is_verbose else "",
+            f"{args} " if args else "",
         )
 
         publish_dm.WriteVerbose(f"Command Line: {command_line}\n\n")

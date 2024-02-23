@@ -45,6 +45,7 @@ _debug_typer_option = typer.Option("--debug", help="Write debug information to t
 def BlackFuncFactory(
     repo_root: Path,  # given /src/<package_name>, repo_root is /
     app: typer.Typer,
+    additional_args: Optional[str] = None,
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("black", no_args_is_help=False)
@@ -56,6 +57,13 @@ def BlackFuncFactory(
                 help="Format the files; the default behavior checks if any files need to be formatted.",
             ),
         ] = False,
+        black_args: Annotated[
+            Optional[str],
+            typer.Option(
+                "--args",
+                help="Additional arguments passed to black.",
+            ),
+        ] = None,
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
     ) -> None:
@@ -64,10 +72,20 @@ def BlackFuncFactory(
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
+            args = []
+
+            if additional_args:
+                args.append(additional_args)
+            if black_args:
+                args.append(black_args)
+
+            optional_args = " ".join(args) if args else None
+
             PythonBuildActivities.Black(
                 dm,
                 repo_root,
                 format_sources=format,
+                args=optional_args,
             )
 
     # ----------------------------------------------------------------------
@@ -80,6 +98,7 @@ def PylintFuncFactory(
     package_root: Path,  # given /src/<package_name>, package_root is /src/<package_name>
     app: typer.Typer,
     default_min_score: float = 9.5,
+    additional_args: Optional[str] = None,
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("pylint", no_args_is_help=False)
@@ -93,6 +112,13 @@ def PylintFuncFactory(
                 help="Fail if the total score is less than this value.",
             ),
         ] = default_min_score,
+        pylint_args: Annotated[
+            Optional[str],
+            typer.Option(
+                "--args",
+                help="Additional arguments passed to pylint.",
+            ),
+        ] = None,
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
     ) -> None:
@@ -101,10 +127,20 @@ def PylintFuncFactory(
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
+            args = []
+
+            if additional_args:
+                args.append(additional_args)
+            if pylint_args:
+                args.append(pylint_args)
+
+            optional_args = " ".join(args) if args else None
+
             PythonBuildActivities.Pylint(
                 dm,
                 package_root,
                 min_score,
+                args=optional_args,
             )
 
     # ----------------------------------------------------------------------
@@ -118,6 +154,7 @@ def PytestFuncFactory(
     cov_name: str,
     app: typer.Typer,
     default_min_coverage: float = 95.0,
+    additional_args: Optional[str] = None,
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("pytest", no_args_is_help=False)
@@ -132,7 +169,7 @@ def PytestFuncFactory(
         ] = False,
         pytest_args: Annotated[
             Optional[str],
-            typer.Option("--pytest-args", help="Additional arguments passed to pytest."),
+            typer.Option("--args", help="Additional arguments passed to pytest."),
         ] = None,
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
@@ -142,12 +179,21 @@ def PytestFuncFactory(
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
+            args = []
+
+            if additional_args:
+                args.append(additional_args)
+            if pytest_args:
+                args.append(pytest_args)
+
+            optional_args = " ".join(args) if args else None
+
             PythonBuildActivities.Pytest(
                 dm,
                 test_root,
                 cov_name,
                 default_min_coverage if code_coverage else None,
-                pytest_args,
+                args=optional_args,
                 code_coverage=code_coverage,
                 run_benchmarks=benchmark,
             )
@@ -209,13 +255,14 @@ def UpdateVersionFuncFactory(
 def PackageFuncFactory(
     repo_root: Path,  # given /src/<package_name>, repo_root is /
     app: typer.Typer,
+    additional_args: Optional[str] = None,
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("package", no_args_is_help=False)
     def Package(
-        additional_args: Annotated[
+        package_args: Annotated[
             Optional[str],
-            typer.Option("--args", help="Additional arguments passed to the build command."),
+            typer.Option("--args", help="Additional arguments passed to build."),
         ] = None,
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
@@ -225,10 +272,19 @@ def PackageFuncFactory(
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
+            args = []
+
+            if additional_args:
+                args.append(additional_args)
+            if package_args:
+                args.append(package_args)
+
+            optional_args = " ".join(args) if args else None
+
             PythonBuildActivities.Package(
                 dm,
                 repo_root,
-                additional_args,
+                args=optional_args,
             )
 
     # ----------------------------------------------------------------------
@@ -240,6 +296,7 @@ def PackageFuncFactory(
 def PublishFuncFactory(
     repo_root: Path,  # given /src/<package_name>, repo_root is /
     app: typer.Typer,
+    additional_args: Optional[str] = None,
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("publish", no_args_is_help=False)
@@ -254,6 +311,10 @@ def PublishFuncFactory(
             bool,
             typer.Option("--production", help="Push to the PyPi.org rather than test.PyPi.org."),
         ] = False,
+        publish_args: Annotated[
+            Optional[str],
+            typer.Option("--args", help="Additional arguments based to the publish command."),
+        ] = None,
         verbose: Annotated[bool, _verbose_typer_option] = False,
         debug: Annotated[bool, _debug_typer_option] = False,
     ) -> None:
@@ -262,11 +323,21 @@ def PublishFuncFactory(
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
+            args = []
+
+            if additional_args:
+                args.append(additional_args)
+            if publish_args:
+                args.append(publish_args)
+
+            optional_args = " ".join(args) if args else None
+
             PythonBuildActivities.Publish(
                 dm,
                 repo_root,
                 pypi_api_token,
                 production=production,
+                args=optional_args,
             )
 
     # ----------------------------------------------------------------------

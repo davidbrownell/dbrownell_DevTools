@@ -36,16 +36,14 @@ def SkipCreateDockerImageDecorator():
     should_skip = False
     reason = ""
 
-    if SubprocessEx.Run("docker --version").returncode != 0:
+    result = SubprocessEx.Run("docker info")
+
+    if result.returncode != 0:
         should_skip = True
         reason = "Docker is not running"
-    elif os.name == "nt":
-        result = SubprocessEx.Run("docker info")
-        assert result.returncode == 0, result.output
-
-        if "OSType: windows" in result.output:
-            should_skip = True
-            reason = "Docker is configured to build windows containers"
+    elif os.name == "nt" and "OSType: windows" in result.output:
+        should_skip = True
+        reason = "Docker is configured to build windows containers"
 
     return pytest.mark.skipif(should_skip, reason=reason)
 

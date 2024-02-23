@@ -281,7 +281,7 @@ class TestPytest:
                 cast(DoneManager, next(dm_and_content)),
                 _repo_root,
                 "dbrownell_DevTools",
-                pytest_args="more args here",
+                args="more args here",
             ),
         )
 
