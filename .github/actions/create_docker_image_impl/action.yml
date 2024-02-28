@@ -15,12 +15,31 @@ name: "[impl] Create Docker Image"
 description: "Creates a Docker image within the current repository"
 
 inputs:
-  name_suffix:
+  docker_name_suffix:
+    required: false
+    type: string
+    default: ""
+
+  docker_tag_suffix:
+    required: false
+    type: string
+    default: ""
+
+  docker_description:
     required: true
     type: string
 
   bootstrap_args:
     required: true
+    type: string
+
+  push_image_as_package:
+    required: false
+    type: boolean
+    default: false
+
+  container_registry_password:
+    required: false
     type: string
 
   operating_system:
@@ -63,10 +82,66 @@ runs:
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py create_docker_image --name-suffix "${{ inputs.name_suffix }}" --bootstrap-args "${{ inputs.bootstrap_args }}" --verbose
+        python Build.py create_docker_image --name-suffix "${{ inputs.docker_name_suffix }}" --tag-suffix "${{ inputs.docker_tag_suffix }}" --description "${{ inputs.docker_description }}" --bootstrap-args "${{ inputs.bootstrap_args }}" --verbose
 
-    - name: Upload
+    - name: Get Image Name
+      id: image_name
+      shell: ${{ inputs.shell_name }}
+      run: |
+        echo "IMAGE_NAME=$(docker images --format {{.Repository}}:{{.Tag}} | awk 'NR==1')" >> $GITHUB_OUTPUT
+        echo "IMAGE_NAME_NO_TAG=$(docker images --format {{.Repository}} | awk 'NR==1')" >> $GITHUB_OUTPUT
+
+    - name: Save Docker Image
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+
+        python -c "
+        import sys
+        from pathlib import Path
+
+        from dbrownell_Common.Streams.DoneManager import DoneManager
+        from dbrownell_DevTools import BuildActivities
+
+        with DoneManager.Create(sys.stdout, 'Saving...') as dm:
+            BuildActivities.SaveDockerImage(
+                dm,
+                '${{ steps.image_name.outputs.IMAGE_NAME }}',
+                Path('./${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}.tar${{ inputs.compressed_extension }}'),
+            )
+        "
+
+    - name: Upload Docker Image
       uses: actions/upload-artifact@v4
       with:
-        name: "docker_image-${{ inputs.operating_system }}-${{ inputs.python_version }}"
-        path: docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}
+        name: docker_image-${{ inputs.docker_tag_suffix }}.tar${{ inputs.compressed_extension }}
+        path: ${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}.tar${{ inputs.compressed_extension }}
+
+    - name: Log in to the Container registry
+      if: ${{ inputs.push_image_as_package && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ inputs.container_registry_password }}
+
+    - name: Push Docker Image
+      if: ${{ inputs.push_image_as_package && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      shell: ${{ inputs.shell_name }}
+      run: |
+        ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
+
+        python -c "
+        import sys
+
+        from dbrownell_Common.Streams.DoneManager import DoneManager
+        from dbrownell_DevTools import BuildActivities
+
+        with DoneManager.Create(sys.stdout, 'Pushing...') as dm:
+            BuildActivities.PushDockerImage(
+                dm,
+                '${{ steps.image_name.outputs.IMAGE_NAME }}',
+                'ghcr.io',
+                '${{ github.actor }}',
+            )
+        "

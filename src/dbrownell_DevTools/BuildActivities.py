@@ -18,9 +18,10 @@ import textwrap
 import uuid
 
 from contextlib import contextmanager
-from datetime import datetime
 from pathlib import Path
 from typing import Callable, Generator, Optional, Protocol
+
+import git
 
 from AutoGitSemVer.Lib import GetSemanticVersion  # type: ignore [import-untyped]
 from dbrownell_Common.ContextlibEx import ExitStack  # type: ignore [import-untyped]
@@ -28,7 +29,6 @@ from dbrownell_Common import PathEx  # type: ignore [import-untyped]
 from dbrownell_Common.Streams.DoneManager import DoneManager  # type: ignore[import-untyped]
 from dbrownell_Common import SubprocessEx  # type: ignore [import-untyped]
 from semantic_version import Version as SemVer  # type: ignore [import-untyped]
-import git
 
 
 # ----------------------------------------------------------------------
@@ -81,50 +81,212 @@ def CreateDockerImage(
     repo_root: Path,
     create_base_image_func: Optional[CreateBaseImageFunc] = None,
     bootstrap_args: str = "--package",
-    name_suffix: Optional[str] = None,  # Decorates the docker image name and output file
-) -> None:
+    docker_name_suffix: Optional[str] = None,
+    docker_tag_suffix: Optional[str] = None,
+    docker_license: Optional[str] = None,  # https://spdx.org/licenses/
+    docker_description: Optional[str] = None,
+) -> Optional[str]:
     create_base_image_func = create_base_image_func or _CreateDefaultBaseImage  # type: ignore
-    name_suffix = name_suffix or ""
 
     # Extract the repo name
-    repo_name: Optional[str] = None
+    repo_origin: Optional[str] = None
+    last_commit: Optional[str] = None
 
     with dm.Nested(
         "Extracting repository info...",
-        lambda: repo_name or "<Error>",
+        lambda: repo_origin or "<Error>",
     ):
         repo = git.Repo(repo_root)
 
-        repo_name = repo.remotes.origin.url.split(".git")[0].split("/")[-1]
+        repo_origin = repo.remotes.origin.url.split(".git")[0]
+        last_commit = repo.head.object.hexsha
+
+    assert repo_origin is not None
+    assert last_commit is not None
 
     # Create the base image
     with create_base_image_func(dm) as base_image_name:  # type: ignore
         if dm.result != 0:
-            return
+            return None
 
         with _CreateDockerContainer(dm, repo_root, bootstrap_args, base_image_name) as container_id:
             if dm.result != 0:
-                return
+                return None
 
             with _SaveTemporaryImage(dm, container_id) as temporary_image_id:
                 if dm.result != 0:
-                    return
+                    return None
 
                 with _CreateFinalImage(
                     dm,
-                    name_suffix,
-                    repo_name,
+                    docker_name_suffix,
+                    docker_tag_suffix,
+                    last_commit.lower(),
+                    docker_license,
+                    docker_description,
+                    repo_origin,
                     temporary_image_id,
                 ) as final_image_id:
                     if dm.result != 0:
-                        return
+                        return None
 
-                    _ExtractImage(
-                        dm,
-                        repo_root,
-                        name_suffix,
-                        final_image_id,
-                    )
+                    return final_image_id
+
+
+# ----------------------------------------------------------------------
+def SaveDockerImage(
+    dm: DoneManager,
+    docker_image: str,
+    output_filename: Path,
+    *,
+    delete_image: bool = False,
+) -> None:
+    output_filename.parent.mkdir(parents=True, exist_ok=True)
+
+    save_filename = output_filename.with_suffix("")
+
+    if os.name == "nt":
+        # ----------------------------------------------------------------------
+        def WindowsPostprocess():
+            # Zip the tarball
+            StreamCommand(
+                dm,
+                "Compressing docker image...",
+                f'PowerShell -Command "Compress-Archive -Path {save_filename} -DestinationPath {output_filename}"',
+                lambda: PathEx.GetSizeDisplay(output_filename),
+            )
+
+        # ----------------------------------------------------------------------
+
+        postprocess_func = WindowsPostprocess
+    else:
+        # ----------------------------------------------------------------------
+        def StandardPostprocess():
+            StreamCommand(
+                dm,
+                "Compressing docker image...",
+                f'gzip --keep "{save_filename}"',
+                lambda: PathEx.GetSizeDisplay(output_filename),
+            )
+
+            if dm.result != 0:
+                return
+
+            assert save_filename.is_file(), output_filename
+
+        # ----------------------------------------------------------------------
+
+        postprocess_func = StandardPostprocess
+
+    if save_filename.is_file():
+        with dm.Nested("Removing previous docker image..."):
+            save_filename.unlink()
+
+    StreamCommand(
+        dm,
+        "Saving docker image...",
+        f'docker save --output "{save_filename}" {docker_image}',
+        lambda: PathEx.GetSizeDisplay(save_filename),
+    )
+
+    if dm.result != 0:
+        return
+
+    with ExitStack(save_filename.unlink):
+        if output_filename.is_file():
+            with dm.Nested("Removing previous compressed docker image..."):
+                output_filename.unlink()
+
+        postprocess_func()
+
+    if dm.result != 0:
+        return
+
+    if delete_image:
+        StreamCommand(
+            dm,
+            "Deleting docker image...",
+            f"docker image rm {docker_image}",
+        )
+
+
+# ----------------------------------------------------------------------
+def PushDockerImage(
+    dm: DoneManager,
+    docker_image: str,
+    container_registry_url: Optional[str] = None,
+    container_registry_username: Optional[str] = None,
+    *,
+    delete_image: bool = True,
+) -> None:
+    docker_image_parts = docker_image.split("/")
+
+    if len(docker_image_parts) == 1:
+        # <image>
+        pass  # Nothing to do here
+    elif len(docker_image_parts) == 2:
+        # <username>/<image>
+        if container_registry_username is not None:
+            raise Exception(
+                f"The container registry username is embedded in the docker image name '{docker_image}'.",
+            )
+
+        container_registry_username = docker_image_parts[0]
+        docker_image = docker_image_parts[1]
+    elif len(docker_image_parts) == 3:
+        # <container_registry_url>/<username>/<image>
+        if container_registry_username is not None:
+            raise Exception(
+                f"The container registry username is embedded in the docker image name '{docker_image}'.",
+            )
+        if container_registry_url is not None:
+            raise Exception(
+                f"The container registry URL is embedded in the docker image name '{docker_image}'.",
+            )
+
+        container_registry_url = docker_image_parts[0]
+        container_registry_username = docker_image_parts[1]
+        docker_image = docker_image_parts[2]
+    else:
+        raise Exception(f"'{docker_image}' is not in a recognized format.")
+
+    if container_registry_url is not None:
+        container_registry_url = container_registry_url.lstrip("https://").rstrip("/")
+
+    new_image_name = "{}{}{}".format(
+        f"{container_registry_url}/" if container_registry_url else "",
+        f"{container_registry_username}/" if container_registry_username else "",
+        docker_image,
+    )
+
+    exit_func: Optional[Callable[[], None]] = None
+
+    if new_image_name != docker_image:
+        StreamCommand(
+            dm,
+            "Tagging docker image...",
+            f"docker tag {docker_image} {new_image_name}",
+        )
+
+        if dm.result != 0:
+            return
+
+        if delete_image:
+            exit_func = lambda: StreamCommand(
+                dm,
+                "Deleting docker image...",
+                f"docker image rm {new_image_name}",
+            )
+
+    if exit_func is None:
+        exit_func = lambda *args, **kwargs: None
+
+    with ExitStack(exit_func):
+        StreamCommand(
+            dm,
+            "Pushing docker image...",
+            f"docker push {new_image_name}",
+        )
 
 
 # ----------------------------------------------------------------------
@@ -291,16 +453,35 @@ def _SaveTemporaryImage(
 @contextmanager
 def _CreateFinalImage(
     dm: DoneManager,
-    name_suffix: str,
-    repo_name: str,
+    name_suffix: Optional[str],
+    tag_suffix: Optional[str],
+    commit_hash: str,
+    docker_license: Optional[str],
+    docker_description: Optional[str],
+    repo_origin: str,
     temporary_image_id: str,
 ) -> Generator[str, None, None]:
-    now = datetime.now()
-    image_name = f"{repo_name}{name_suffix}-{now.year:04d}.{now.month:02d}.{now.day:02d}-{now.hour:02d}.{now.minute:02d}.{now.second:02d}".lower()
+    repo_name = repo_origin.split("/")[-1]
 
-    docker_filename = Path(f"{image_name}.dockerfile")
+    image_name = "{}{}:{}{}".format(
+        repo_name,
+        f"-{name_suffix}" if name_suffix else "",
+        commit_hash,
+        f"-{tag_suffix}" if tag_suffix else "",
+    ).lower()
+
+    docker_filename = Path(f"{repo_name}.dockerfile")
 
     with dm.Nested("Creating final Dockerfile..."):
+        description_label = (
+            f'LABEL org.opencontainers.image.description="{docker_description}"'
+            if docker_description
+            else ""
+        )
+        license_label = (
+            f'LABEL org.opencontainers.image.licenses="{docker_license}"' if docker_license else ""
+        )
+
         with docker_filename.open("w") as f:
             f.write(
                 textwrap.dedent(
@@ -310,6 +491,10 @@ def _CreateFinalImage(
                     WORKDIR /code
 
                     ENTRYPOINT ["/bin/bash", "--login"]
+
+                    LABEL org.opencontainers.image.source={repo_origin}
+                    {description_label}
+                    {license_label}
                     """,
                 ),
             )
@@ -325,62 +510,4 @@ def _CreateFinalImage(
             yield ""
             return
 
-        with ExitStack(
-            lambda: StreamCommand(
-                dm,
-                "Deleting final image...",
-                f"docker image rm {image_name}",
-            ),
-        ):
-            yield image_name
-
-
-# ----------------------------------------------------------------------
-def _ExtractImage(
-    dm: DoneManager,
-    repo_root: Path,
-    name_suffix: str,
-    final_image_id: str,
-) -> None:
-    if os.name == "nt":
-        compressed_filename = repo_root / f"docker_image{name_suffix}.tar"
-
-        # ----------------------------------------------------------------------
-        def Postprocess():
-            with ExitStack(compressed_filename.unlink):
-                # Zip the tarball
-                final_filename = compressed_filename.with_suffix(".tar.zip")
-
-                if final_filename.is_file():
-                    with dm.Nested("Removing previous compressed docker image..."):
-                        final_filename.unlink()
-
-                StreamCommand(
-                    dm,
-                    "Compressing docker image...",
-                    f'PowerShell -Command "Compress-Archive -Path {compressed_filename} -DestinationPath {final_filename}"',
-                    lambda: PathEx.GetSizeDisplay(final_filename),
-                )
-
-        # ----------------------------------------------------------------------
-
-        postprocess_func = Postprocess
-    else:
-        compressed_filename = repo_root / f"docker_image{name_suffix}.tar.gz"
-        postprocess_func = lambda *args, **kwargs: None
-
-    if compressed_filename.is_file():
-        with dm.Nested("Removing previous docker image..."):
-            compressed_filename.unlink()
-
-    StreamCommand(
-        dm,
-        "Saving docker image...",
-        f'docker save --output "{compressed_filename}" {final_image_id}',
-        lambda: PathEx.GetSizeDisplay(compressed_filename),
-    )
-
-    if dm.result != 0:
-        return
-
-    postprocess_func()
+        yield image_name

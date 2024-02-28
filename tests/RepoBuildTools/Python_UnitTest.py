@@ -322,22 +322,34 @@ def test_BuildBinaries():
 def test_CreateDockerImage():
     app = typer.Typer()
 
-    CreateDockerImageFuncFactory(Path.cwd(), app)
+    CreateDockerImageFuncFactory(Path.cwd(), app, "MIT")
 
     result, args, kwargs = _PatchFunction(
         "CreateDockerImage",
         app,
-        ["--bootstrap-args", "foo"],
+        [
+            "--bootstrap-args",
+            "foo",
+            "--description",
+            "the_description",
+            "--name-suffix",
+            "the_name_suffix",
+            "--tag-suffix",
+            "the_tag_suffix",
+        ],
         "BuildActivities",
     )
 
     assert result.exit_code == 0
     assert result.stdout == ""
-    assert len(args) == 5
+    assert len(args) == 8
     assert args[1] == Path.cwd()
     assert args[2] is None  # create_base_image_func
     assert args[3] == "--package foo"
-    assert args[4] is None  # name_suffix
+    assert args[4] == "the_name_suffix"
+    assert args[5] == "the_tag_suffix"
+    assert args[6] == "MIT"
+    assert args[7] == "the_description"
     assert not kwargs
 
 

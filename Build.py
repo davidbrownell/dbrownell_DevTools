@@ -64,7 +64,7 @@ UpdateVersion = RepoBuildTools.UpdateVersionFuncFactory(
 Package = RepoBuildTools.PackageFuncFactory(this_dir, app)
 Publish = RepoBuildTools.PublishFuncFactory(this_dir, app)
 
-CreateDockerImage = RepoBuildTools.CreateDockerImageFuncFactory(this_dir, app)
+CreateDockerImage = RepoBuildTools.CreateDockerImageFuncFactory(this_dir, app, "MIT")
 
 
 # ----------------------------------------------------------------------

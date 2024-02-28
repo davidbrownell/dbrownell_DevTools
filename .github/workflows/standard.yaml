@@ -97,7 +97,7 @@ jobs:
       python_version: ${{ matrix.python_version }}
 
   # ----------------------------------------------------------------------
-  package_validation:
+  validate_package:
     needs: package
 
     strategy:
@@ -125,8 +125,34 @@ jobs:
       validation_command: python -c "from dbrownell_DevTools import __version__; print(__version__)"
 
   # ----------------------------------------------------------------------
+  create_docker_image:
+    needs:
+      - validate_package
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        python_version:
+          - "3.12"
+          - "3.11"
+          - "3.10"
+          # - "3.9"  # Not supported
+          # - "3.8"  # Not supported
+
+    name: Create Docker Image
+
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_docker_image.yaml@CITemporary # main
+    with:
+      operating_system: ubuntu-latest
+      python_version: ${{ matrix.python_version }}
+      docker_tag_suffix: ${{ matrix.python_version }}
+      docker_description: "dbrownell_DevTools - ${{ matrix.python_version }}"
+      push_image_as_package: true
+
+  # ----------------------------------------------------------------------
   publish:
-    needs: package_validation
+    needs: create_docker_image
 
     name: Publish
 
