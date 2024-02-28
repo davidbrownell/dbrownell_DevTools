@@ -15,12 +15,7 @@ name: "[impl] Create Docker Image"
 description: "Creates a Docker image within the current repository"
 
 inputs:
-  docker_name_suffix:
-    required: false
-    type: string
-    default: ""
-
-  docker_tag_suffix:
+  name_suffix:
     required: false
     type: string
     default: ""
@@ -82,7 +77,7 @@ runs:
       shell: ${{ inputs.shell_name }}
       run: |
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python Build.py create_docker_image --name-suffix "${{ inputs.docker_name_suffix }}" --tag-suffix "${{ inputs.docker_tag_suffix }}" --description "${{ inputs.docker_description }}" --bootstrap-args "${{ inputs.bootstrap_args }}" --verbose
+        python Build.py create_docker_image --name-suffix "${{ inputs.name_suffix }}" --description "${{ inputs.docker_description }}" --bootstrap-args "${{ inputs.bootstrap_args }}" --verbose
 
     - name: Get Image Name
       id: image_name
@@ -107,15 +102,15 @@ runs:
             BuildActivities.SaveDockerImage(
                 dm,
                 '${{ steps.image_name.outputs.IMAGE_NAME }}',
-                Path('./${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}.tar${{ inputs.compressed_extension }}'),
+                Path('./${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}'),
             )
         "
 
     - name: Upload Docker Image
       uses: actions/upload-artifact@v4
       with:
-        name: docker_image-${{ inputs.docker_tag_suffix }}.tar${{ inputs.compressed_extension }}
-        path: ${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}.tar${{ inputs.compressed_extension }}
+        name: docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}
+        path: ${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}
 
     - name: Log in to the Container registry
       if: ${{ inputs.push_image_as_package && github.event_name == 'push' && github.ref == 'refs/heads/main' }}

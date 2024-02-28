@@ -81,8 +81,7 @@ def CreateDockerImage(
     repo_root: Path,
     create_base_image_func: Optional[CreateBaseImageFunc] = None,
     bootstrap_args: str = "--package",
-    docker_name_suffix: Optional[str] = None,
-    docker_tag_suffix: Optional[str] = None,
+    name_suffix: Optional[str] = None,
     docker_license: Optional[str] = None,  # https://spdx.org/licenses/
     docker_description: Optional[str] = None,
 ) -> Optional[str]:
@@ -119,8 +118,7 @@ def CreateDockerImage(
 
                 with _CreateFinalImage(
                     dm,
-                    docker_name_suffix,
-                    docker_tag_suffix,
+                    name_suffix,
                     last_commit.lower(),
                     docker_license,
                     docker_description,
@@ -454,7 +452,6 @@ def _SaveTemporaryImage(
 def _CreateFinalImage(
     dm: DoneManager,
     name_suffix: Optional[str],
-    tag_suffix: Optional[str],
     commit_hash: str,
     docker_license: Optional[str],
     docker_description: Optional[str],
@@ -463,12 +460,7 @@ def _CreateFinalImage(
 ) -> Generator[str, None, None]:
     repo_name = repo_origin.split("/")[-1]
 
-    image_name = "{}{}:{}{}".format(
-        repo_name,
-        f"-{name_suffix}" if name_suffix else "",
-        commit_hash,
-        f"-{tag_suffix}" if tag_suffix else "",
-    ).lower()
+    image_name = f"{repo_name}:{commit_hash}{name_suffix}".lower()
 
     docker_filename = Path(f"{repo_name}.dockerfile")
 

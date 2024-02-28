@@ -61,7 +61,7 @@ def test_CreateDockerImage():
                 creating_dm,
                 repo_root,
                 bootstrap_args="--package --verbose",
-                docker_name_suffix=unique_id,
+                name_suffix=unique_id,
             )
 
             assert creating_dm.result == 0

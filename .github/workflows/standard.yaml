@@ -146,7 +146,7 @@ jobs:
     with:
       operating_system: ubuntu-latest
       python_version: ${{ matrix.python_version }}
-      docker_tag_suffix: ${{ matrix.python_version }}
+      name_suffix: -${{ matrix.python_version }}
       docker_description: "dbrownell_DevTools - ${{ matrix.python_version }}"
       push_image_as_package: true
 
