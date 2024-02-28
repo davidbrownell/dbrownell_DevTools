@@ -84,7 +84,6 @@ runs:
       shell: ${{ inputs.shell_name }}
       run: |
         echo "IMAGE_NAME=$(docker images --format {{.Repository}}:{{.Tag}} | awk 'NR==1')" >> $GITHUB_OUTPUT
-        echo "IMAGE_NAME_NO_TAG=$(docker images --format {{.Repository}} | awk 'NR==1')" >> $GITHUB_OUTPUT
 
     - name: Save Docker Image
       shell: ${{ inputs.shell_name }}
@@ -102,7 +101,7 @@ runs:
             BuildActivities.SaveDockerImage(
                 dm,
                 '${{ steps.image_name.outputs.IMAGE_NAME }}',
-                Path('./${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}'),
+                Path('./docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}'),
             )
         "
 
@@ -110,7 +109,7 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}
-        path: ${{ steps.image_name.outputs.IMAGE_NAME_NO_TAG }}${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}
+        path: docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}
 
     - name: Log in to the Container registry
       if: ${{ inputs.push_image_as_package && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
