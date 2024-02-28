@@ -25,13 +25,7 @@ on:
         required: true
         type: string
 
-      docker_name_suffix:
-        # Optional suffix applied to the image name
-        required: false
-        type: string
-        default: ""
-
-      docker_tag_suffix:
+      name_suffix:
         # Optional suffix applied to the image tag
         required: false
         type: string
@@ -85,8 +79,7 @@ jobs:
       - name: Create Docker Image
         uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CITemporary # main
         with:
-          docker_name_suffix: ${{ inputs.docker_name_suffix }}
-          docker_tag_suffix: ${{ inputs.docker_tag_suffix }}
+          name_suffix: ${{ inputs.name_suffix }}
           docker_description: ${{ inputs.docker_description }}
           push_image_as_package: ${{ inputs.push_image_as_package }}
           container_registry_password: ${{ secrets.GITHUB_TOKEN }}

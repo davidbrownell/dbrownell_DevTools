@@ -433,14 +433,7 @@ def CreateDockerImageFuncFactory(
             Optional[str],
             typer.Option(
                 "--name-suffix",
-                help="Suffix applies to the docker image name.",
-            ),
-        ] = None,
-        tag_suffix: Annotated[
-            Optional[str],
-            typer.Option(
-                "--tag-suffix",
-                help="Suffix applied to the docker image tag.",
+                help="Suffix applies to the docker image tag.",
             ),
         ] = None,
         description: Annotated[
@@ -477,7 +470,6 @@ def CreateDockerImageFuncFactory(
                 create_base_image_func,
                 final_bootstrap_args,
                 name_suffix,
-                tag_suffix,
                 docker_license,
                 description or default_description,
             )
