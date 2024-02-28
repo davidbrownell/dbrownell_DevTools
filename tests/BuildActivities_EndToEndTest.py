@@ -51,56 +51,23 @@ def SkipCreateDockerImageDecorator():
 # ----------------------------------------------------------------------
 @SkipCreateDockerImageDecorator()
 def test_CreateDockerImage():
-    unique_id = "-{}".format(str(uuid.uuid4()).replace("-", ""))
+    unique_id = str(uuid.uuid4()).replace("-", "")
     repo_root = Path(__file__).parent.parent
 
     sys.stdout.write("\n")
     with DoneManager.Create(sys.stdout, "Testing") as dm:
         with dm.Nested("Creating docker image...") as creating_dm:
-            CreateDockerImage(
+            image_name = CreateDockerImage(
                 creating_dm,
                 repo_root,
                 bootstrap_args="--package --verbose",
-                name_suffix=unique_id,
+                docker_name_suffix=unique_id,
             )
 
             assert creating_dm.result == 0
+            assert image_name is not None
 
         with dm.Nested("Testing docker image...") as test_dm:
-            if os.name == "nt":
-                compressed_filename = PathEx.EnsureFile(
-                    repo_root / f"docker_image{unique_id}.tar.zip"
-                )
-
-                with ExitStack(compressed_filename.unlink):
-                    # Decompress the file
-                    StreamCommand(
-                        test_dm,
-                        "Decompressing...",
-                        f"""PowerShell -Command "Expand-Archive -Path '{compressed_filename}' -DestinationPath .""",
-                        cwd=repo_root,
-                    )
-
-                    assert test_dm.result == 0
-
-                image_filename = PathEx.EnsureFile(repo_root / f"docker_image{unique_id}.tar")
-            else:
-                image_filename = PathEx.EnsureFile(repo_root / f"docker_image{unique_id}.tar.gz")
-
-            with ExitStack(image_filename.unlink):
-                image_name: Optional[str] = None
-
-                with test_dm.Nested("Loading image...") as load_dm:
-                    result = SubprocessEx.Run(f'docker load --input "{image_filename}"')
-                    assert result.returncode == 0
-
-                    match = re.match(r"Loaded image: (?P<name>.+)\r?\n", result.output)
-                    assert match, result.output
-
-                    image_name = match.group("name")
-
-                assert image_name is not None
-
             with ExitStack(
                 lambda: StreamCommand(
                     test_dm,

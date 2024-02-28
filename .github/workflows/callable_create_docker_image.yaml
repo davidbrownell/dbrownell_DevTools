@@ -25,15 +25,34 @@ on:
         required: true
         type: string
 
-      name_suffix:
+      docker_name_suffix:
+        # Optional suffix applied to the image name
+        required: false
+        type: string
+        default: ""
+
+      docker_tag_suffix:
+        # Optional suffix applied to the image tag
+        required: false
+        type: string
+        default: ""
+
+      docker_description:
+        # Optional description embedded in the generated image
         required: false
         type: string
         default: ""
 
       bootstrap_args:
+        # Optional arguments provided to the Bootstrap script within the image
         required: false
         type: string
         default: ""
+
+      push_image_as_package:
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   docker_image:
@@ -64,9 +83,13 @@ jobs:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Create Docker Image
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CITemporary # main
         with:
-          name_suffix: ${{ inputs.name_suffix }}
+          docker_name_suffix: ${{ inputs.docker_name_suffix }}
+          docker_tag_suffix: ${{ inputs.docker_tag_suffix }}
+          docker_description: ${{ inputs.docker_description }}
+          push_image_as_package: ${{ inputs.push_image_as_package }}
+          container_registry_password: ${{ secrets.GITHUB_TOKEN }}
           bootstrap_args: ${{ inputs.bootstrap_args }}
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}

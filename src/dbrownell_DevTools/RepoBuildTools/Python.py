@@ -421,8 +421,10 @@ def BuildBinariesFuncFactory(
 def CreateDockerImageFuncFactory(
     repo_root: Path,  # Given /src/<package_name>, repo_root is /
     app: typer.Typer,
-    create_base_image_func: Optional[BuildActivities.CreateBaseImageFunc] = None,
+    docker_license: Optional[str] = None,  # https://spdx.org/licenses/
+    default_description: Optional[str] = None,
     default_bootstrap_args: str = "--package",
+    create_base_image_func: Optional[BuildActivities.CreateBaseImageFunc] = None,
 ) -> Callable:
     # ----------------------------------------------------------------------
     @app.command("create_docker_image", no_args_is_help=False)
@@ -431,7 +433,21 @@ def CreateDockerImageFuncFactory(
             Optional[str],
             typer.Option(
                 "--name-suffix",
-                help="Suffix to apply to the generated image name",
+                help="Suffix applies to the docker image name.",
+            ),
+        ] = None,
+        tag_suffix: Annotated[
+            Optional[str],
+            typer.Option(
+                "--tag-suffix",
+                help="Suffix applied to the docker image tag.",
+            ),
+        ] = None,
+        description: Annotated[
+            Optional[str],
+            typer.Option(
+                "--description",
+                help="Description embedded within the docker image.",
             ),
         ] = None,
         bootstrap_args: Annotated[
@@ -449,18 +465,27 @@ def CreateDockerImageFuncFactory(
         with DoneManager.CreateCommandLine(
             flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
         ) as dm:
+            # Create the image
             final_bootstrap_args = default_bootstrap_args
 
             if bootstrap_args:
                 final_bootstrap_args += f" {bootstrap_args}"
 
-            BuildActivities.CreateDockerImage(
+            docker_image_id = BuildActivities.CreateDockerImage(
                 dm,
                 repo_root,
                 create_base_image_func,
                 final_bootstrap_args,
-                name_suffix or None,
+                name_suffix,
+                tag_suffix,
+                docker_license,
+                description or default_description,
             )
+
+            if dm.result != 0:
+                return
+
+            assert docker_image_id is not None
 
     # ----------------------------------------------------------------------
 

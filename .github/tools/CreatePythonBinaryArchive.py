@@ -62,7 +62,7 @@ def CreateArchive(
         all_directories: list[Path] = []
 
         with dm.Nested("Collecting binary directories...") as collect_dm:
-            regex = re.compile(r"^exe\..+?-\d+\.\d+$")
+            binary_regex = re.compile(r"^exe\..+?-\d+\.\d+$")
 
             for root, directories, _ in os.walk(this_dir / "build"):
                 if not directories:
@@ -73,7 +73,7 @@ def CreateArchive(
                 for directory in directories:
                     fullpath = root_path / directory
 
-                    match = regex.match(directory)
+                    match = binary_regex.match(directory)
                     if match:
                         all_directories.append(fullpath)
                     else:
@@ -84,7 +84,7 @@ def CreateArchive(
                         if (
                             len(children) == 1
                             and children[0].is_dir()
-                            and regex.match(children[0].name)
+                            and binary_regex.match(children[0].name)
                         ):
                             renamed_directory = root_path / "{}-{}".format(
                                 directory, children[0].name
