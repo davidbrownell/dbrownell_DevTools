@@ -135,7 +135,7 @@ runs:
         from dbrownell_Common.Streams.DoneManager import DoneManager
         from dbrownell_DevTools import BuildActivities
 
-        with DoneManager.Create(sys.stdout, "Pushing...") as dm:
+        with DoneManager.Create(sys.stdout, 'Pushing...') as dm:
             BuildActivities.PushDockerImage(
                 dm,
                 '${{ steps.image_name.outputs.IMAGE_NAME }}',
