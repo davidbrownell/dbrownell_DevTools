@@ -135,11 +135,13 @@ runs:
         from dbrownell_Common.Streams.DoneManager import DoneManager
         from dbrownell_DevTools import BuildActivities
 
-        with DoneManager.CreateCommandLine() as dm:
+        with DoneManager.Create(sys.stdout, "Pushing...") as dm:
             BuildActivities.PushDockerImage(
                 dm,
                 '${{ steps.image_name.outputs.IMAGE_NAME }}',
                 'ghcr.io',
                 '${{ inputs.container_registry_username }}',
             )
+
+        sys.exit(dm.result)
         "
