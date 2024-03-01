@@ -48,6 +48,11 @@ on:
         type: boolean
         default: false
 
+      container_registry_username:
+        required: false
+        type: string
+        default: ""
+
 jobs:
   docker_image:
     name: Execute
@@ -77,11 +82,12 @@ jobs:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Create Docker Image
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CITemporary # main
         with:
           name_suffix: ${{ inputs.name_suffix }}
           docker_description: ${{ inputs.docker_description }}
           push_image_as_package: ${{ inputs.push_image_as_package }}
+          container_registry_username: ${{ inputs.container_registry_username }}
           container_registry_password: ${{ secrets.GITHUB_TOKEN }}
           bootstrap_args: ${{ inputs.bootstrap_args }}
           operating_system: ${{ inputs.operating_system }}
