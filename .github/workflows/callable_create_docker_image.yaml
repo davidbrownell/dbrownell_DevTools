@@ -82,7 +82,7 @@ jobs:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Create Docker Image
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CITemporary # main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@main
         with:
           name_suffix: ${{ inputs.name_suffix }}
           docker_description: ${{ inputs.docker_description }}
