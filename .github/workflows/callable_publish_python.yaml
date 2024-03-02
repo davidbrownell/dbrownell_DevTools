@@ -16,6 +16,12 @@ run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name 
 
 on:
   workflow_call:
+    inputs:
+      release_sources_configuration_filename:
+        description: "The name of the file that contains the file and direcotry configurations to trigger new releases."
+        required: true
+        type: string
+
     secrets:
       PYPI_TOKEN:
         required: true
@@ -44,26 +50,22 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Has Source Changes?
+      - name: Has Release Changes?
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: dorny/paths-filter@v3
-        id: has_code_changes
+        id: has_release_changes
         with:
-          filters: |
-            src:
-              - 'src/**'
-              - 'pyproject.toml'
-              - 'README.md'
+          filters: ${{ inputs.release_sources_configuration_filename }}
 
       - name: Initialize
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_code_changes.outputs.src == 'true' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
         id: Initialize
         uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
         with:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Publish
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_code_changes.outputs.src == 'true' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
         uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@main
         with:
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
