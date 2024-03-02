@@ -157,7 +157,7 @@ jobs:
 
     name: Publish
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_publish_python.yaml@CITemporary # main
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_publish_python.yaml@main
     with:
       release_sources_configuration_filename: .github/release_sources.yaml
     secrets: inherit
