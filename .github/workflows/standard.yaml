@@ -127,7 +127,7 @@ jobs:
   # ----------------------------------------------------------------------
   create_docker_image:
     needs:
-      - validate_package
+      - validate
 
     strategy:
       fail-fast: false
@@ -153,7 +153,9 @@ jobs:
 
   # ----------------------------------------------------------------------
   publish:
-    needs: create_docker_image
+    needs:
+      - validate_package
+      - create_docker_image
 
     name: Publish
 
