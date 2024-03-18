@@ -158,7 +158,7 @@ def UpdateTags(
 
         with dm.Nested("Pushing tags..."):
             for tag in tags:
-                repo.remotes.origin.push(tag)
+                repo.remotes.origin.push(tag, force=True)
 
 
 # ----------------------------------------------------------------------
