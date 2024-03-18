@@ -101,7 +101,12 @@ def Execute(
             lines = result.split("\n")
 
             for index, line in enumerate(lines):
-                lines[index] = line.strip()
+                line = line.rstrip()
+
+                if not line:
+                    line = "&nbsp;"
+
+                lines[index] = line
 
             # Surround with <pre> tags
             content = """<pre style="background-color: black; color: #AAAAAA; font-size: .75em">{}</pre>""".format(
