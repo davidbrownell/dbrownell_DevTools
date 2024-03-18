@@ -11,7 +11,7 @@
 # |  Distributed under the MIT License.
 # |
 # ----------------------------------------------------------------------
-name: "[impl] Docker Image"
+name: "[Callable] Create Docker Image"
 run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
 
 on:

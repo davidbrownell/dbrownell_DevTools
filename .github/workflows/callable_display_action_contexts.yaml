@@ -11,7 +11,7 @@
 # |  Distributed under the MIT License.
 # |
 # ----------------------------------------------------------------------
-name: "[impl] GitHub Action Contexts"
+name: "[Callable] Display GitHub Action Contexts"
 run-name: ${{ github.run_number }} [${{ github.actor }}] on ${{ github.ref_name }}
 
 on:
