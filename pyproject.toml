@@ -53,6 +53,7 @@ classifiers = [
 ]
 
 dependencies = [
+    "ansi2html == 1.*",
     "AutoGitSemVer",
     "black == 23.*",
     "coverage == 7.*",
@@ -79,8 +80,8 @@ package = [
     "twine == 4.*",
 ]
 
-# TODO: [project.scripts]
-# TODO: builder = "dbrownell_DevTools.Builder:EntryPoint.app"
+[project.scripts]
+output2markdown = "dbrownell_DevTools:Output2Markdown.app"
 
 [project.urls]
 Homepage = "https://github.com/davidbrownell/dbrownell_DevTools"
