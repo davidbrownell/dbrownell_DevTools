@@ -55,7 +55,7 @@ classifiers = [
 dependencies = [
     "ansi2html == 1.*",
     "AutoGitSemVer",
-    "black == 23.*",
+    "black == 24.*",
     "coverage == 7.*",
     "dbrownell_Common",
     "pylint == 3.*",
