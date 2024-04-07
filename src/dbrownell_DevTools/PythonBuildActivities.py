@@ -14,15 +14,23 @@
 """Functionality often invoked as part of a python project's build process"""
 
 import os
+import re
 import shutil
+import sys
 
 from pathlib import Path
 from typing import Optional
 
+from dbrownell_Common.ContextlibEx import ExitStack  # type: ignore[import-untyped]
 from dbrownell_Common.InflectEx import inflect  # type: ignore[import-untyped]
 from dbrownell_Common import PathEx  # type: ignore[import-untyped]
 from dbrownell_Common.Streams.DoneManager import DoneManager, DoneManagerException  # type: ignore[import-untyped]
 from dbrownell_Common import SubprocessEx  # type: ignore[import-untyped]
+
+if sys.version_info >= (3, 11):
+    from tomllib import load as toml_load
+else:
+    from tomli import load as toml_load
 
 
 # ----------------------------------------------------------------------
@@ -115,17 +123,73 @@ def Package(
 ) -> None:
     """Builds a python package"""
 
-    with dm.Nested("Packaging...") as package_dm:
-        command_line = "python -m build {}".format(args or "")
+    delete_dynamic_readme_file_func = lambda: None
 
-        package_dm.WriteVerbose(f"Command Line: {command_line}\n\n")
+    # Dynamically extract content from README.md if:
+    #
+    #      1) `readme` in `pyproject.toml` starts with "dynamic_"
+    #      2) `README.md` contains the tags
+    #           <!-- BEGIN: Exclude Package -->
+    #           <!-- END: Exclude Package -->
+    #          surrounding content that should not be included in the
+    #          package's README content
+    #
+    with dm.Nested("Preparing README.md..."):
+        with PathEx.EnsureFile(source_root / "pyproject.toml").open("rb") as f:
+            toml_content = toml_load(f)
 
-        with package_dm.YieldStream() as stream:
-            package_dm.result = SubprocessEx.Stream(
-                command_line,
-                stream,
-                cwd=source_root,
-            )
+        readme_filename = toml_content.get("project", {}).get("readme", None)
+        if readme_filename.startswith("dynamic_"):
+            original_filename = PathEx.EnsureFile(source_root / "README.md")
+            dynamic_filename = source_root / readme_filename
+
+            # Get the existing content
+            with original_filename.open() as f:
+                readme_content = f.read()
+
+            # Update the content
+            begin_regex = re.compile(r"<!--\s*BEGIN:\s*Exclude Package\s*-->")
+            end_regex = re.compile(r"<!--\s*END:\s*Exclude Package\s*-->")
+
+            new_content: list[str] = []
+            last_index = 0
+
+            while True:
+                begin_match = begin_regex.search(readme_content, last_index)
+                if begin_match is None:
+                    break
+
+                new_content.append(readme_content[last_index : begin_match.start()])
+
+                end_match = end_regex.search(readme_content, begin_match.end())
+                if end_match is None:
+                    raise DoneManagerException("Missing end tag for exclude package")
+
+                last_index = end_match.end()
+
+            new_content.append(readme_content[last_index:])
+
+            readme_content = "".join(new_content)
+
+            # Write the updated content to the dynamic file
+            with dynamic_filename.open("w") as f:
+                f.write(readme_content)
+
+            # Delete the file when done
+            delete_dynamic_readme_file_func = dynamic_filename.unlink
+
+    with ExitStack(delete_dynamic_readme_file_func):
+        with dm.Nested("Packaging...") as package_dm:
+            command_line = "python -m build {}".format(args or "")
+
+            package_dm.WriteVerbose(f"Command Line: {command_line}\n\n")
+
+            with package_dm.YieldStream() as stream:
+                package_dm.result = SubprocessEx.Stream(
+                    command_line,
+                    stream,
+                    cwd=source_root,
+                )
 
 
 # ----------------------------------------------------------------------
