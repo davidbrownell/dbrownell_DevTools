@@ -298,6 +298,7 @@ class TestPackage:
     expected_output = textwrap.dedent(
         """\
         Heading...
+          Preparing README.md...DONE! (0, <scrubbed duration>)
           Packaging...DONE! (0, <scrubbed duration>)
         DONE! (0, <scrubbed duration>)
         """,
