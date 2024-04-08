@@ -69,9 +69,7 @@ dynamic = [
     "version",
 ]
 
-# The README.md file used when generating packages will be dynamically generated based on the content
-# found in README.md.
-readme = "dynamic_README.md"
+readme = "README.md"
 
 [project.optional-dependencies]
 dev = [
