@@ -146,7 +146,7 @@ def Package(
                 )
 
             # Get the existing content
-            with fullpath.open() as f:
+            with fullpath.open(encoding="utf-8") as f:
                 readme_content = f.read()
 
             # Generate the new content
@@ -182,7 +182,7 @@ def Package(
                 # Preserve the original readme file while this one us being used for packaging
                 shutil.move(fullpath, preserved_fullpath)
 
-                with fullpath.open("w") as f:
+                with fullpath.open("w", encoding="utf-8") as f:
                     f.write(readme_content)
 
                 # ----------------------------------------------------------------------
