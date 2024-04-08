@@ -19,7 +19,7 @@ import shutil
 import sys
 
 from pathlib import Path
-from typing import Optional
+from typing import Callable, Optional
 
 from dbrownell_Common.ContextlibEx import ExitStack  # type: ignore[import-untyped]
 from dbrownell_Common.InflectEx import inflect  # type: ignore[import-untyped]
@@ -123,31 +123,33 @@ def Package(
 ) -> None:
     """Builds a python package"""
 
-    delete_dynamic_readme_file_func = lambda: None
+    restore_readme_file_func: Optional[Callable[[], None]] = None
 
-    # Dynamically extract content from README.md if:
+    # Dynamically extract content from README.md. Use the sentinels below to exclude content from
+    # the generated file:
     #
-    #      1) `readme` in `pyproject.toml` starts with "dynamic_"
-    #      2) `README.md` contains the tags
-    #           <!-- BEGIN: Exclude Package -->
-    #           <!-- END: Exclude Package -->
-    #          surrounding content that should not be included in the
-    #          package's README content
+    #     <!-- BEGIN: Exclude Package -->
+    #     <!-- END: Exclude Package -->
     #
     with dm.Nested("Preparing README.md..."):
         with PathEx.EnsureFile(source_root / "pyproject.toml").open("rb") as f:
             toml_content = toml_load(f)
 
         readme_filename = toml_content.get("project", {}).get("readme", None)
-        if readme_filename.startswith("dynamic_"):
-            original_filename = PathEx.EnsureFile(source_root / "README.md")
-            dynamic_filename = source_root / readme_filename
+        if readme_filename is not None:
+            fullpath = PathEx.EnsureFile(source_root / readme_filename)
+            preserved_fullpath = fullpath.with_suffix(f"{fullpath.suffix}.original")
+
+            if preserved_fullpath.is_file():
+                raise Exception(
+                    f"The filename '{preserved_fullpath}' already exists. Please restore this file before continuing."
+                )
 
             # Get the existing content
-            with original_filename.open() as f:
+            with fullpath.open() as f:
                 readme_content = f.read()
 
-            # Update the content
+            # Generate the new content
             begin_regex = re.compile(r"<!--\s*BEGIN:\s*Exclude Package\s*-->")
             end_regex = re.compile(r"<!--\s*END:\s*Exclude Package\s*-->")
 
@@ -167,18 +169,34 @@ def Package(
 
                 last_index = end_match.end()
 
-            new_content.append(readme_content[last_index:])
+            if not new_content:
+                # If here, it means there wasn't a begin token found and the content wasn't modified.
+                # Create a noop for the restore func
+                restore_readme_file_func = lambda: None
 
-            readme_content = "".join(new_content)
+            else:
+                # If here, content was modified.
+                new_content.append(readme_content[last_index:])
+                readme_content = "".join(new_content)
 
-            # Write the updated content to the dynamic file
-            with dynamic_filename.open("w") as f:
-                f.write(readme_content)
+                # Preserve the original readme file while this one us being used for packaging
+                shutil.move(fullpath, preserved_fullpath)
 
-            # Delete the file when done
-            delete_dynamic_readme_file_func = dynamic_filename.unlink
+                with fullpath.open("w") as f:
+                    f.write(readme_content)
 
-    with ExitStack(delete_dynamic_readme_file_func):
+                # ----------------------------------------------------------------------
+                def RestoreReadmeFile():
+                    fullpath.unlink()
+                    shutil.move(preserved_fullpath, fullpath)
+
+                # ----------------------------------------------------------------------
+
+                restore_readme_file_func = RestoreReadmeFile
+
+    assert restore_readme_file_func is not None
+
+    with ExitStack(restore_readme_file_func):
         with dm.Nested("Packaging...") as package_dm:
             command_line = "python -m build {}".format(args or "")
 
