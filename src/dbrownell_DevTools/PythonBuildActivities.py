@@ -84,7 +84,7 @@ def Pylint(
 # ----------------------------------------------------------------------
 def Pytest(
     dm: DoneManager,
-    test_root: Path,
+    source_root: Path,
     python_package_name: str,
     min_coverage: Optional[float] = None,
     *,
@@ -111,7 +111,7 @@ def Pytest(
             pytest_dm.result = SubprocessEx.Stream(
                 command_line,
                 stream,
-                cwd=test_root,
+                cwd=source_root,
             )
 
 
