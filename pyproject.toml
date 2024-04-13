@@ -83,6 +83,7 @@ package = [
 
 [project.scripts]
 output2markdown = "dbrownell_DevTools:Output2Markdown.app"
+match_tests = "dbrownell_DevTools.Scripts.Python:MatchTests.app"
 
 [project.urls]
 Homepage = "https://github.com/davidbrownell/dbrownell_DevTools"
