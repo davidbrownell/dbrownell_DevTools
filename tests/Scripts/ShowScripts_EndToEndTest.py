@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------------
 # |
-# |  Output2Markdown_UnitTest.py
+# |  ShowScripts_EndToEndTest.py
 # |
 # |  David Brownell <db@DavidBrownell.com>
-# |      2024-03-15 10:38:22
+# |      2024-04-13 23:50:22
 # |
 # ----------------------------------------------------------------------
 # |
@@ -11,16 +11,15 @@
 # |  Distributed under the MIT License.
 # |
 # ----------------------------------------------------------------------
-# """Unit tests for Output2Markdown.py."""
+"""End-to-end tests for ShowScripts.py."""
 
-
-from dbrownell_DevTools.Output2Markdown import app
 from typer.testing import CliRunner
+
+from dbrownell_DevTools.Scripts.ShowScripts import app
 
 
 # ----------------------------------------------------------------------
-def test_SingleLine():
-    result = CliRunner().invoke(app, ['''python -c \"print('Hello world!')\"'''])
+def test_Standard():
+    result = CliRunner().invoke(app)
 
-    assert result.exit_code == 0
-    assert result.stdout == ""
+    assert result.exit_code == 0, result.output
