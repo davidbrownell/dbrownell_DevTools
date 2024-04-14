@@ -56,6 +56,7 @@ dependencies = [
     "ansi2html == 1.*",
     "AutoGitSemVer",
     "black == 24.*",
+    "cogapp == 3.*",
     "coverage == 7.*",
     "dbrownell_Common",
     "pylint == 3.*",
@@ -83,7 +84,9 @@ package = [
 
 [project.scripts]
 output2markdown = "dbrownell_DevTools:Output2Markdown.app"
+
 match_tests = "dbrownell_DevTools.Scripts.Python:MatchTests.app"
+vscode_tests = "dbrownell_DevTools.Scripts.Python:VSCodeTests.app"
 
 [project.urls]
 Homepage = "https://github.com/davidbrownell/dbrownell_DevTools"
