@@ -1,9 +1,9 @@
 # ----------------------------------------------------------------------
 # |
-# |  VSCodeTests_EndToEndTest.py
+# |  Output2Markdown_UnitTest.py
 # |
 # |  David Brownell <db@DavidBrownell.com>
-# |      2024-04-13 23:13:13
+# |      2024-03-15 10:38:22
 # |
 # ----------------------------------------------------------------------
 # |
@@ -11,20 +11,16 @@
 # |  Distributed under the MIT License.
 # |
 # ----------------------------------------------------------------------
-"""End-to-end tests for VSCodeTests.py."""
+# """Unit tests for Output2Markdown.py."""
 
-from pathlib import Path
 
-from dbrownell_Common import PathEx
+from dbrownell_DevTools.Scripts.Output2Markdown import app
 from typer.testing import CliRunner
-
-from dbrownell_DevTools.Scripts.Python.VSCodeTests import app
 
 
 # ----------------------------------------------------------------------
-def test_Standard():
-    repo_root = PathEx.EnsureDir(Path(__file__).parent.parent.parent.parent)
+def test_SingleLine():
+    result = CliRunner().invoke(app, ['''python -c \"print('Hello world!')\"'''])
 
-    result = CliRunner().invoke(app, [str(repo_root)])
-
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 0
+    assert result.stdout == ""
