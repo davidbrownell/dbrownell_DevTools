@@ -60,7 +60,13 @@ jobs:
         run: |
           . ./Activate.sh
 
-          coverage combine stage
+          cd stage
+
+          if [[ -d tests ]]; then
+            cd tests
+          fi
+
+          coverage combine .
           coverage report --ignore-errors --show-missing --skip-covered
           coverage json --ignore-errors
 
