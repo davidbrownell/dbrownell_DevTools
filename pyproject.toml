@@ -86,6 +86,10 @@ package = [
 output2markdown = "dbrownell_DevTools.Scripts:Output2Markdown.app"
 show_scripts = "dbrownell_DevTools.Scripts:ShowScripts.app"
 
+# CommitEmojis
+commit_emojis = "dbrownell_DevTools.Scripts.CommitEmojis.__main__:app"
+
+# Python
 match_tests = "dbrownell_DevTools.Scripts.Python:MatchTests.app"
 vscode_tests = "dbrownell_DevTools.Scripts.Python:VSCodeTests.app"
 
