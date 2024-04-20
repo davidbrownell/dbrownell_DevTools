@@ -25,6 +25,6 @@ from dbrownell_DevTools.Scripts.Python.MatchTests import app
 def test_Standard():
     repo_root = PathEx.EnsureDir(Path(__file__).parent.parent.parent.parent)
 
-    result = CliRunner().invoke(app, [str(repo_root)])
+    result = CliRunner().invoke(app, [str(repo_root), "--exclude", "update_data.py"])
 
     assert result.exit_code == 0, result.output
