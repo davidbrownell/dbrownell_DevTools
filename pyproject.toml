@@ -196,3 +196,6 @@ python_files = [
 # ----------------------------------------------------------------------
 [tool.setuptools.dynamic]
 version = { attr = "dbrownell_DevTools.__version__" }
+
+[tool.setuptools.package-data]
+dbrownell_DevTools = ["**/*.json", ]
