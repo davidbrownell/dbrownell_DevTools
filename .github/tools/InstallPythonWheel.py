@@ -58,7 +58,7 @@ if len(wheel_files) > 1:
 sys.stdout.write("Installing '{}'...\n".format(wheel_files[0]))
 
 result = subprocess.run(
-    'pip install "{}"'.format(wheel_files[0]),
+    'pip install --disable-pip-version-check "{}"'.format(wheel_files[0]),
     check=True,
     shell=True,
     stdout=subprocess.PIPE,

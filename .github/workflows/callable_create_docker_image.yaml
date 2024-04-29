@@ -77,12 +77,12 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.15.5
         with:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Create Docker Image
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CI-v0.15.5
         with:
           name_suffix: ${{ inputs.name_suffix }}
           docker_description: ${{ inputs.docker_description }}
