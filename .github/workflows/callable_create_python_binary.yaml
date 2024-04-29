@@ -49,12 +49,12 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.15.5
         with:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Create Binary
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/build_python_binary_impl@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/build_python_binary_impl@CI-v0.15.5
         with:
           build_description: Build Binary
           build_command_line: python Build.py build_binary --verbose

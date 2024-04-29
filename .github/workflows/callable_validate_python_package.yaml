@@ -37,12 +37,12 @@ jobs:
     steps:
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.15.5
         with:
           operating_system: ${{ inputs.operating_system }}
 
       - name: Validate Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@main
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.15.5
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
