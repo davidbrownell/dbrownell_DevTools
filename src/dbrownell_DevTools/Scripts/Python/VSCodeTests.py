@@ -126,7 +126,6 @@ if os.getenv(IS_COGGING_ENVVAR_NAME, None) is None:
                     result = cogger.main(
                         [
                             "custom_cog",  # Fake script name
-                            "-c",  # Checksum
                             "-e",  # Warn if a file has no cog code in it
                             "-r",  # Replace
                             "--verbosity=0",
