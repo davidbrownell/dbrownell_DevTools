@@ -220,7 +220,7 @@ else:
                             "group": "{group}",
                         }},
 
-                        "type": "python",
+                        "type": "debugpy",
                         "request": "launch",
                         "justMyCode": false,
                         "console": "integratedTerminal",
