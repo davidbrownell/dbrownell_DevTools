@@ -244,7 +244,7 @@ else:
 
                             // "-k", "test_name or expression",
 
-                            // Insert custom program args here
+                            // Insert custom debugger args here
                         ],
                     }},
                     """,
