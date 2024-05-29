@@ -381,6 +381,7 @@ def _CreateDockerContainer(
                     f"""\
                     #!/bin/bash
 
+                    git config --global --add safe.directory /local/.git
                     git clone /local code
 
                     cd code
