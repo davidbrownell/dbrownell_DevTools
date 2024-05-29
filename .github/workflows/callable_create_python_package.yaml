@@ -49,12 +49,25 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.15.6
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.16.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
+      # Note that this action is invoked in the original repository (e.g. not dbrownell_DevTools)
+      - name: Custom Initialization (./.github/actions/initialize_create_python_package)
+        uses: ./.github/actions/initialize_create_python_package
+        if: ${{ hashFiles('.github/actions/initialize_create_python_package/action.yml') != '' }}
+        with:
+          operating_system: ${{ inputs.operating_system }}
+          python_version: ${{ inputs.python_version }}
+          script_prefix: ${{ steps.initialize.outputs.script_prefix }}
+          script_extension: ${{ steps.initialize.outputs.script_extension }}
+          shell_name: ${{ steps.initialize.outputs.shell_name }}
+          source_command: ${{ steps.initialize.outputs.source_command }}
+          sudo_command: ${{ steps.initialize.outputs.sudo_command }}
+
       - name: Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/package_python_impl@CI-v0.15.6
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/package_python_impl@CI-v0.16.0
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
