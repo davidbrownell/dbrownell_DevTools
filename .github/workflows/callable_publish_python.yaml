@@ -26,6 +26,9 @@ on:
       PYPI_TOKEN:
         required: true
 
+      CUSTOM_INITIALIZATION_SECRET:
+        required: false
+
 jobs:
   publish:
     name: Execute
@@ -60,21 +63,22 @@ jobs:
       - name: Initialize
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.16.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.17.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
       # Note that this action is invoked in the original repository (e.g. not dbrownell_DevTools)
       - name: Custom Initialization (./.github/actions/initialize_publish_python)
         uses: ./.github/actions/initialize_publish_python
-        if: ${{ hashFiles('.github/actions/initialize_publish_python/action.yml') != '' }}
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' && hashFiles('.github/actions/initialize_publish_python/action.yml') != '' }}
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
+          custom_initialization_secret: ${{ secrets.CUSTOM_INITIALIZATION_SECRET }}
 
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.16.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.17.0
         with:
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}

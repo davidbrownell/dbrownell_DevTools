@@ -29,6 +29,10 @@ on:
         required: true
         type: string
 
+    secrets:
+      CUSTOM_INITIALIZATION_SECRET:
+        required: false
+
 jobs:
   validate:
     name: Execute
@@ -37,7 +41,7 @@ jobs:
     steps:
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.16.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.17.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -48,6 +52,7 @@ jobs:
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
+          custom_initialization_secret: ${{ secrets.CUSTOM_INITIALIZATION_SECRET }}
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}
           shell_name: ${{ steps.initialize.outputs.shell_name }}
@@ -55,7 +60,7 @@ jobs:
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
 
       - name: Validate Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.16.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.17.0
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
