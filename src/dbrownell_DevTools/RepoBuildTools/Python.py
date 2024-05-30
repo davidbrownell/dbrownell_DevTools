@@ -150,7 +150,7 @@ def PylintFuncFactory(
 
 # ----------------------------------------------------------------------
 def PytestFuncFactory(
-    test_root: Path,  # given /src/<package_name> and /tests, test_root is /tests
+    repo_root: Path,  # given /src/<package_name>, repo_root is /
     cov_name: str,
     app: typer.Typer,
     default_min_coverage: float = 95.0,
@@ -190,7 +190,7 @@ def PytestFuncFactory(
 
             PythonBuildActivities.Pytest(
                 dm,
-                test_root,
+                repo_root,
                 cov_name,
                 default_min_coverage if code_coverage else None,
                 args=optional_args,

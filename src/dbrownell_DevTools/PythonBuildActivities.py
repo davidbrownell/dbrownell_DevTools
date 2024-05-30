@@ -36,7 +36,7 @@ else:
 # ----------------------------------------------------------------------
 def Black(
     dm: DoneManager,
-    source_root: Path,
+    repo_root: Path,
     *,
     format_sources: bool = False,
     args: Optional[str] = None,
@@ -48,7 +48,7 @@ def Black(
             "" if format_sources else "--check ",
             "--verbose " if black_dm.is_verbose else "",
             f"{args} " if args else "",
-            source_root,
+            repo_root,
         )
 
         black_dm.WriteVerbose(f"Command Line: {command_line}\n\n")
@@ -60,7 +60,7 @@ def Black(
 # ----------------------------------------------------------------------
 def Pylint(
     dm: DoneManager,
-    source_root: Path,
+    package_root: Path,
     min_score: float = 9.5,
     *,
     args: Optional[str] = None,
@@ -72,7 +72,7 @@ def Pylint(
             min_score,
             "--verbose " if pylint_dm.is_verbose else "",
             f"{args} " if args else "",
-            source_root,
+            package_root,
         )
 
         pylint_dm.WriteVerbose(f"Command Line: {command_line}\n\n")
@@ -84,7 +84,7 @@ def Pylint(
 # ----------------------------------------------------------------------
 def Pytest(
     dm: DoneManager,
-    source_root: Path,
+    repo_root: Path,
     python_package_name: str,
     min_coverage: Optional[float] = None,
     *,
@@ -111,14 +111,14 @@ def Pytest(
             pytest_dm.result = SubprocessEx.Stream(
                 command_line,
                 stream,
-                cwd=source_root,
+                cwd=repo_root,
             )
 
 
 # ----------------------------------------------------------------------
 def Package(
     dm: DoneManager,
-    source_root: Path,
+    repo_root: Path,
     args: Optional[str] = None,
 ) -> None:
     """Builds a python package"""
@@ -132,12 +132,12 @@ def Package(
     #     <!-- END: Exclude Package -->
     #
     with dm.Nested("Preparing README.md..."):
-        with PathEx.EnsureFile(source_root / "pyproject.toml").open("rb") as f:
+        with PathEx.EnsureFile(repo_root / "pyproject.toml").open("rb") as f:
             toml_content = toml_load(f)
 
         readme_filename = toml_content.get("project", {}).get("readme", None)
         if readme_filename is not None:
-            fullpath = PathEx.EnsureFile(source_root / readme_filename)
+            fullpath = PathEx.EnsureFile(repo_root / readme_filename)
             preserved_fullpath = fullpath.with_suffix(f"{fullpath.suffix}.original")
 
             if preserved_fullpath.is_file():
@@ -206,14 +206,14 @@ def Package(
                 package_dm.result = SubprocessEx.Stream(
                     command_line,
                     stream,
-                    cwd=source_root,
+                    cwd=repo_root,
                 )
 
 
 # ----------------------------------------------------------------------
 def Publish(
     dm: DoneManager,
-    source_root: Path,
+    repo_root: Path,
     pypi_api_token: str,
     *,
     production: bool = False,
@@ -221,7 +221,7 @@ def Publish(
 ) -> None:
     """Publishes a python package"""
 
-    dist_dir = source_root / "dist"
+    dist_dir = repo_root / "dist"
 
     if not dist_dir.is_dir():
         raise DoneManagerException(
@@ -249,7 +249,7 @@ def Publish(
             publish_dm.result = SubprocessEx.Stream(
                 command_line,
                 stream,
-                cwd=source_root,
+                cwd=repo_root,
             )
 
 
