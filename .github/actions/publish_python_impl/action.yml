@@ -39,6 +39,11 @@ inputs:
     required: true
     type: string
 
+  minisign_private_key:
+    required: false
+    type: string
+    default: ""
+
 runs:
   using: composite
   steps:
@@ -56,13 +61,19 @@ runs:
       shell: ${{ inputs.shell_name }}
       id: organize_artifacts
       run: |
-        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/main/.github/tools/OrganizePythonArtifacts.py --output OrganizePythonArtifacts.py --no-progress-meter --fail-with-body
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI-v0.18.0/.github/tools/OrganizePythonArtifacts.py --output OrganizePythonArtifacts.py --no-progress-meter --fail-with-body
 
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
-        python OrganizePythonArtifacts.py ./stage ./dist
+        python OrganizePythonArtifacts.py ./stage ./dist "${{ inputs.minisign_private_key }}" --verbose
 
         echo "python_version=$(cat ./dist/__version__)" >> $GITHUB_OUTPUT
         rm ./dist/__version__
+
+    - name: Upload Signatures
+      uses: actions/upload-artifact@v4
+      with:
+        name: "Minisign signatures"
+        path: ./dist/*.minisig
 
     - name: Publish
       shell: ${{ inputs.shell_name }}

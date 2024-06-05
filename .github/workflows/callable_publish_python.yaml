@@ -29,6 +29,9 @@ on:
       CUSTOM_INITIALIZATION_SECRET:
         required: false
 
+      MINISIGN_PRIVATE_KEY:
+        required: false
+
 jobs:
   publish:
     name: Execute
@@ -63,7 +66,7 @@ jobs:
       - name: Initialize
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.17.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.18.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -78,7 +81,7 @@ jobs:
 
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.17.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.18.0
         with:
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}
@@ -86,3 +89,4 @@ jobs:
           source_command: ${{ steps.initialize.outputs.source_command }}
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
           pypi_token: ${{ secrets.PYPI_TOKEN }}
+          minisign_private_key: ${{ secrets.MINISIGN_PRIVATE_KEY }}
