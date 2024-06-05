@@ -41,7 +41,7 @@ jobs:
     steps:
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.17.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.18.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -60,7 +60,7 @@ jobs:
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
 
       - name: Validate Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.17.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.18.0
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}

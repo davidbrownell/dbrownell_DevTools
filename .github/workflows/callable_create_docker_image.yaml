@@ -81,7 +81,7 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.17.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.18.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -99,7 +99,7 @@ jobs:
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
 
       - name: Create Docker Image
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CI-v0.17.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/create_docker_image_impl@CI-v0.18.0
         with:
           name_suffix: ${{ inputs.name_suffix }}
           docker_description: ${{ inputs.docker_description }}

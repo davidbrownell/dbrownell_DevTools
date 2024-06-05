@@ -23,9 +23,11 @@ from typing import Annotated, Optional
 
 import typer
 
+from dbrownell_Common.ContextlibEx import ExitStack  # type: ignore [import-untyped]
 from dbrownell_Common.InflectEx import inflect  # type: ignore [import-untyped]
 from dbrownell_Common import PathEx  # type: ignore [import-untyped]
-from dbrownell_Common.Streams.DoneManager import DoneManager  # type: ignore [import-untyped]
+from dbrownell_Common.Streams.DoneManager import DoneManager, Flags as DoneManagerFlags  # type: ignore [import-untyped]
+from dbrownell_Common import SubprocessEx  # type: ignore [import-untyped]
 from typer.core import TyperGroup  # type: ignore [import-untyped]
 
 
@@ -67,8 +69,24 @@ def Organize(
             help="Destination directory.",
         ),
     ],
+    minisign_private_key: Annotated[
+        Optional[str],
+        typer.Argument(
+            help="Minisign private key contents.",
+        ),
+    ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", help="Write verbose information to the terminal."),
+    ] = False,
+    debug: Annotated[
+        bool,
+        typer.Option("--debug", help="Write debug information to the terminal."),
+    ] = False,
 ) -> None:
-    with DoneManager.CreateCommandLine() as dm:
+    with DoneManager.CreateCommandLine(
+        flags=DoneManagerFlags.Create(verbose=verbose, debug=debug),
+    ) as dm:
         all_filenames: list[Path] = []
 
         with dm.Nested(
@@ -120,30 +138,67 @@ def Organize(
             for filenames in all_files.values():
                 filenames.sort(key=lambda f: f.stat().st_size)
 
-        with dm.Nested("Copying files...") as copy_dm:
-            dest_dir.mkdir(parents=True, exist_ok=True)
+        if minisign_private_key:
+            with dm.Nested("Preserving minisign private key file..."):
+                minisign_private_key_filename = PathEx.CreateTempFileName()
 
-            for filenames in all_files.values():
-                filename = filenames[0]
+                with minisign_private_key_filename.open("w") as f:
+                    f.write(minisign_private_key)
 
-                with copy_dm.Nested("Copying '{}'...".format(filename.name)) as this_copy_dm:
-                    shutil.copyfile(filename, dest_dir / filename.name)
+                cleanup_key_func = minisign_private_key_filename.unlink
+                sign_command_line_template = f'docker run -i --rm -v "{minisign_private_key_filename.parent}:/host/key" -v "{dest_dir}:/host/content" jedisct1/minisign -S -m "/host/content/{{name}}" -s "/host/key/{minisign_private_key_filename.name}" -t "Version {wheel_version}" -x "/host/content/{{name}}.minisig"'
+        else:
+            cleanup_key_func = lambda: None
+            sign_command_line_template = None
 
-                    if len(filenames) > 1:
-                        this_copy_dm.WriteInfo(
-                            textwrap.dedent(
-                                """\
-                                Multiple files were found for '{}' (the first file will be copied):
-                                {}
-                                """,
-                            ).format(
-                                filename.name,
-                                "\n".join(
-                                    "    {}) [{}] {}".format(index + 1, PathEx.GetSizeDisplay(f), f)
-                                    for index, f in enumerate(filenames)
+        with ExitStack(cleanup_key_func):
+            with dm.Nested("Copying files...") as copy_dm:
+                dest_dir.mkdir(parents=True, exist_ok=True)
+
+                for filenames in all_files.values():
+                    filename = filenames[0]
+
+                    with copy_dm.Nested("Copying '{}'...".format(filename.name)) as this_copy_dm:
+                        shutil.copyfile(filename, dest_dir / filename.name)
+
+                        if len(filenames) > 1:
+                            this_copy_dm.WriteInfo(
+                                textwrap.dedent(
+                                    """\
+                                    Multiple files were found for '{}' (the first file will be copied):
+                                    {}
+                                    """,
+                                ).format(
+                                    filename.name,
+                                    "\n".join(
+                                        "    {}) [{}] {}".format(
+                                            index + 1, PathEx.GetSizeDisplay(f), f
+                                        )
+                                        for index, f in enumerate(filenames)
+                                    ),
                                 ),
-                            ),
-                        )
+                            )
+
+                    # Sign the file (if a key was provided)
+                    if minisign_private_key and not filename.name.startswith("."):
+                        with copy_dm.Nested(
+                            "Signing '{}'...".format(filename.name)
+                        ) as this_sign_dm:
+                            assert sign_command_line_template is not None
+                            sign_command_line = sign_command_line_template.format(
+                                name=filename.name
+                            )
+
+                            this_sign_dm.WriteVerbose(f"Command Line: {sign_command_line}\n\n")
+
+                            with this_sign_dm.YieldStream() as stream:
+                                this_sign_dm.result = SubprocessEx.Stream(
+                                    sign_command_line,
+                                    stream,
+                                    cwd=dest_dir,
+                                )
+                                if this_sign_dm.result != 0:
+                                    return
 
         with dm.Nested("Creating Version file...") as version_dm:
             version_filename = dest_dir / "__version__"
