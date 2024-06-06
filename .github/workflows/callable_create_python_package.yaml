@@ -55,7 +55,7 @@ jobs:
 
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.19.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.20.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -74,7 +74,7 @@ jobs:
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
 
       - name: Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/package_python_impl@CI-v0.19.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/package_python_impl@CI-v0.20.0
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
