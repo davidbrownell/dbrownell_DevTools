@@ -40,6 +40,8 @@ jobs:
       SIMULATE_TERMINAL_CAPABILITIES_SUPPORTS_COLORS: "1"
       PYTHONIOENCODING: "UTF-8"
 
+    permissions: {}
+
     steps:
       - name: "Checkout Source"
         uses: actions/checkout@v4
@@ -68,17 +70,17 @@ jobs:
 
           coverage combine .
           coverage report --ignore-errors --show-missing --skip-covered
-          coverage json --ignore-errors
+          coverage json --ignore-errors -o .coverage.json
 
-          export TOTAL=$(python -c "import json;print(json.load(open('coverage.json'))['totals']['percent_covered_display'])")
-          echo "total=$TOTAL" >> $GITHUB_ENV
+          export TOTAL=$(python -c "import json;print(json.load(open('.coverage.json'))['totals']['percent_covered_display'])")
+          echo "coverage_total=$TOTAL" >> $GITHUB_ENV
           echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Coverage Data
         uses: actions/upload-artifact@v4
         with:
           name: ".coverage.all"
-          path: "**/coverage.json"
+          path: "**/.coverage.json"
 
       - name: Make Coverage Badge
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -88,7 +90,7 @@ jobs:
           gistID: ${{ inputs.gist_id }}
           filename: ${{ inputs.gist_filename }}
           label: Coverage
-          message: ${{ env.total }}%
+          message: ${{ env.coverage_total }}%
           minColorRange: 50
           maxColorRange: 90
-          valColorRange: ${{ env.total }}
+          valColorRange: ${{ env.coverage_total }}

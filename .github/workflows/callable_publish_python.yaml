@@ -43,6 +43,9 @@ jobs:
       PYTHONIOENCODING: "UTF-8"
       GH_TOKEN: ${{ github.token }}
 
+    permissions:
+      contents: write  # To tag the repository and create the release
+
     steps:
       # Ensure that windows machines support long paths
       - name: git Long File Path Support on Windows
@@ -66,7 +69,7 @@ jobs:
       - name: Initialize
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.18.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.19.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -81,7 +84,7 @@ jobs:
 
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.18.0
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.19.0
         with:
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}

@@ -22,6 +22,8 @@ jobs:
     name: Execute
     runs-on: ubuntu-latest
 
+    permissions: {}
+
     steps:
       - name: Dump 'github' Context
         shell: bash

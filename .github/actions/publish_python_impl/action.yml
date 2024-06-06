@@ -61,7 +61,7 @@ runs:
       shell: ${{ inputs.shell_name }}
       id: organize_artifacts
       run: |
-        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI-v0.18.0/.github/tools/OrganizePythonArtifacts.py --output OrganizePythonArtifacts.py --no-progress-meter --fail-with-body
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI-v0.19.0/.github/tools/OrganizePythonArtifacts.py --output OrganizePythonArtifacts.py --no-progress-meter --fail-with-body
 
         ${{ inputs.source_command }} ${{ inputs.script_prefix }}Activate${{ inputs.script_extension }}
         python OrganizePythonArtifacts.py ./stage ./dist "${{ inputs.minisign_private_key }}" --verbose
