@@ -103,11 +103,12 @@ def Organize(
                     all_filenames.append(root_path / walk_filename)
 
         # Organize the files
+        wheel_name: Optional[str] = None
         wheel_version: Optional[str] = None
         all_files: dict[str, list[Path]] = {}
 
         with dm.Nested("Organizing files...") as organize_dm:
-            python_version_regex = re.compile(r"^.+-(?P<version>.+?)-py.+$")
+            python_version_regex = re.compile(r"^(?P<name>.+)-(?P<version>.+?)-py.+$")
 
             for filename in all_filenames:
                 all_files.setdefault(filename.name, []).append(filename)
@@ -122,31 +123,36 @@ def Organize(
                         )
                         continue
 
+                    this_name = match.group("name")
                     this_version = match.group("version")
 
-                    if wheel_version is None:
+                    if wheel_name is None and wheel_version is None:
+                        wheel_name = this_name
                         wheel_version = this_version
-                    elif this_version != wheel_version:
-                        organize_dm.WriteError(
-                            "The wheel version '{}' in '{}' does not match '{}'.\n".format(
-                                this_version,
-                                filename.name,
-                                wheel_version,
-                            )
-                        )
+                    elif wheel_name is not None and wheel_version is not None:
+                        for this_value, prev_value, desc in [
+                            (this_name, wheel_name, "name"),
+                            (this_version, wheel_version, "version"),
+                        ]:
+                            if this_value != prev_value:
+                                organize_dm.WriteError(
+                                    f"The wheel {desc} '{this_value}' in '{filename.name}' does not match '{prev_value}'.\n",
+                                )
+                    else:
+                        assert False, (wheel_name, wheel_version)
 
             for filenames in all_files.values():
                 filenames.sort(key=lambda f: f.stat().st_size)
 
         if minisign_private_key:
-            with dm.Nested("Preserving minisign private key file..."):
+            with dm.Nested("Preserving Minisign private key file..."):
                 minisign_private_key_filename = PathEx.CreateTempFileName()
 
                 with minisign_private_key_filename.open("w") as f:
                     f.write(minisign_private_key)
 
                 cleanup_key_func = minisign_private_key_filename.unlink
-                sign_command_line_template = f'docker run -i --rm -v "{minisign_private_key_filename.parent}:/host/key" -v "{dest_dir}:/host/content" jedisct1/minisign -S -m "/host/content/{{name}}" -s "/host/key/{minisign_private_key_filename.name}" -t "Version {wheel_version}" -x "/host/content/{{name}}.minisig"'
+                sign_command_line_template = f'docker run -i --rm -v "{minisign_private_key_filename.parent}:/host/key" -v "{dest_dir}:/host/content" jedisct1/minisign -S -m "/host/content/{{name}}" -s "/host/key/{minisign_private_key_filename.name}" -t "{wheel_name} v{wheel_version}" -x "/host/content/{{name}}.minisig"'
         else:
             cleanup_key_func = lambda: None
             sign_command_line_template = None

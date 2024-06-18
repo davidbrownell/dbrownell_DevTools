@@ -26,6 +26,19 @@ on:
         type: string
         default: covbadge.json
 
+      coverage_target:
+        required: false
+        type: number
+        description: |-
+          The value can be in one of these formats:
+
+            - A number between 1 and 100, which will be used as the target coverage percentage.
+              For example, a value of 70.5 indicates that the coverage percentage must be >= 70.5%.
+
+            - A number between 0 and 1, which will be used as the percentage of the current coverage percentage.
+              For example, a value of 0.95 indicates that the coverage percentage must be >= 76% when
+              the current coverage percentage is 80% (80% * 0.95 = 76%).
+
     secrets:
       GIST_TOKEN:
         required: true
@@ -75,6 +88,48 @@ jobs:
           export TOTAL=$(python -c "import json;print(json.load(open('.coverage.json'))['totals']['percent_covered_display'])")
           echo "coverage_total=$TOTAL" >> $GITHUB_ENV
           echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
+
+      - name: Validate Coverage Target
+        if: ${{ inputs.coverage_target }}
+        shell: python
+        run: |-
+          import json
+          import sys
+
+          import requests
+
+          coverage_target = ${{ inputs.coverage_target }}
+          coverage_total = ${{ env.coverage_total }}
+
+          if 0.0 <= coverage_target <= 1.0:
+              response = requests.get(
+                  "https://api.github.com/gists/${{ inputs.gist_id }}",
+                  headers={"Authorization": f"token ${{ secrets.GIST_TOKEN }}"},
+              )
+
+              response.raise_for_status()
+              response = response.json()
+
+              prev_percentage = json.loads(response["files"]["${{ inputs.gist_filename }}"]["content"])
+
+              prev_percentage = prev_percentage["message"]
+              assert prev_percentage.endswith("%"), prev_percentage
+
+              prev_percentage = float(prev_percentage[:-1])
+
+              coverage_target *= prev_percentage
+
+          elif 1.0 < coverage_target <= 100.0:
+              pass
+          else:
+              sys.stdout.write(f"'{coverage_target}' is not a valid coverage target.\n")
+              sys.exit(123)
+
+          if coverage_total < coverage_target:
+              sys.stdout.write(f"The coverage target of '{coverage_target}%' was not met (the coverage is '{coverage_total}%').\n")
+              sys.exit(1)
+
+          sys.stdout.write(f"The coverage target of '{coverage_target}%' was met (the coverage is '{coverage_total}%').\n")
 
       - name: Upload Coverage Data
         uses: actions/upload-artifact@v4
