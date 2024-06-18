@@ -48,7 +48,7 @@ runs:
     - name: Install and Validate
       shell: ${{ inputs.shell_name }}
       run: |
-        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI-v0.20.0/.github/tools/InstallPythonWheel.py --output InstallPythonWheel.py --no-progress-meter --fail-with-body
+        curl --location https://raw.githubusercontent.com/davidbrownell/dbrownell_DevTools/CI-v0.21.0/.github/tools/InstallPythonWheel.py --output InstallPythonWheel.py --no-progress-meter --fail-with-body
 
         python InstallPythonWheel.py ./stage
 
