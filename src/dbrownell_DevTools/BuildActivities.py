@@ -97,7 +97,13 @@ def CreateDockerImage(
     ):
         repo = git.Repo(repo_root)
 
-        repo_origin = repo.remotes.origin.url.split(".git")[0]
+        remotes = repo.remotes
+
+        if remotes:
+            repo_origin = remotes.origin.url.split(".git")[0]
+        else:
+            repo_origin = repo_root.name
+
         last_commit = repo.head.object.hexsha
 
     assert repo_origin is not None
@@ -461,7 +467,7 @@ def _CreateFinalImage(
 ) -> Generator[str, None, None]:
     repo_name = repo_origin.split("/")[-1]
 
-    image_name = f"{repo_name}:{commit_hash}{name_suffix}".lower()
+    image_name = f"{repo_name}:{commit_hash}{name_suffix or ''}".lower()
 
     docker_filename = Path(f"{repo_name}.dockerfile")
 
