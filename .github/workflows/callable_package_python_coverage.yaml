@@ -18,7 +18,7 @@ on:
   workflow_call:
     inputs:
       gist_id:
-        required: true
+        required: false
         type: string
 
       gist_filename:
@@ -41,7 +41,7 @@ on:
 
     secrets:
       GIST_TOKEN:
-        required: true
+        required: false
 
 jobs:
   package_coverage:
@@ -90,7 +90,7 @@ jobs:
           echo "### Total coverage: ${TOTAL}%" >> $GITHUB_STEP_SUMMARY
 
       - name: Validate Coverage Target
-        if: ${{ inputs.coverage_target }}
+        if: ${{ inputs.gist_id && inputs.coverage_target }}
         shell: python
         run: |-
           import json
@@ -138,7 +138,7 @@ jobs:
           path: "**/.coverage.json"
 
       - name: Make Coverage Badge
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        if: ${{ inputs.gist_id && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         uses: schneegans/dynamic-badges-action@v1.7.0
         with:
           auth: ${{ secrets.GIST_TOKEN }}
