@@ -393,7 +393,7 @@ def _CreateDockerContainer(
                     cd code
                     ./Bootstrap.sh {bootstrap_args}
 
-                    echo "source /code/Activate.sh" >> /etc/bash.bashrc
+                    echo "source /code/Activate.sh" >> ~/.bash_profile
 
                     . ./Activate.sh
                     pip cache purge
