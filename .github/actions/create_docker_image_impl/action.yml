@@ -107,6 +107,8 @@ runs:
                 '${{ steps.image_name.outputs.IMAGE_NAME }}',
                 Path('./docker_image${{ inputs.name_suffix }}.tar${{ inputs.compressed_extension }}'),
             )
+
+        sys.exit(dm.result)
         "
 
     - name: Upload Docker Image
