@@ -165,7 +165,10 @@ def Organize(
                     filename = filenames[0]
 
                     with copy_dm.Nested("Copying '{}'...".format(filename.name)) as this_copy_dm:
-                        shutil.copyfile(filename, dest_dir / filename.name)
+                        dest_filename = dest_dir / filename.name
+                        dest_filename.unlink(missing_ok=True)
+
+                        shutil.copyfile(filename, dest_filename)
 
                         if len(filenames) > 1:
                             this_copy_dm.WriteInfo(
