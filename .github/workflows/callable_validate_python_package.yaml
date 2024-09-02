@@ -33,6 +33,9 @@ on:
       CUSTOM_INITIALIZATION_SECRET:
         required: false
 
+      CUSTOM_DESTRUCTION_SECRET:
+        required: false
+
 jobs:
   validate:
     name: Execute
@@ -43,7 +46,7 @@ jobs:
     steps:
       - name: Initialize
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.22.1
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.23.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -62,9 +65,23 @@ jobs:
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
 
       - name: Validate Package
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.22.1
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/validate_python_package_impl@CI-v0.23.0
         with:
           operating_system: ${{ inputs.operating_system }}
           python_version: ${{ inputs.python_version }}
           validation_command: ${{ inputs.validation_command }}
           shell_name: ${{ steps.initialize.outputs.shell_name }}
+
+      # Note that this action is invoked in the original repository (e.g. not dbrownell_DevTools)
+      - name: Custom Destruction (./.github/actions/destroy_validate_python_package)
+        uses: ./.github/actions/destroy_validate_python_package
+        if: ${{ hashFiles('.github/actions/destroy_validate_python_package/action.yml') != '' }}
+        with:
+          operating_system: ${{ inputs.operating_system }}
+          python_version: ${{ inputs.python_version }}
+          custom_destruction_secret: ${{ secrets.CUSTOM_DESTRUCTION_SECRET }}
+          script_prefix: ${{ steps.initialize.outputs.script_prefix }}
+          script_extension: ${{ steps.initialize.outputs.script_extension }}
+          shell_name: ${{ steps.initialize.outputs.shell_name }}
+          source_command: ${{ steps.initialize.outputs.source_command }}
+          sudo_command: ${{ steps.initialize.outputs.sudo_command }}
