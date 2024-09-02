@@ -29,6 +29,9 @@ on:
       CUSTOM_INITIALIZATION_SECRET:
         required: false
 
+      CUSTOM_DESTRUCTION_SECRET:
+        required: false
+
       MINISIGN_PRIVATE_KEY:
         required: false
 
@@ -69,7 +72,7 @@ jobs:
       - name: Initialize
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
         id: Initialize
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.22.1
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/initialize@CI-v0.23.0
         with:
           operating_system: ${{ inputs.operating_system }}
 
@@ -84,7 +87,7 @@ jobs:
 
       - name: Publish
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' }}
-        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.22.1
+        uses: davidbrownell/dbrownell_DevTools/.github/actions/publish_python_impl@CI-v0.23.0
         with:
           script_prefix: ${{ steps.initialize.outputs.script_prefix }}
           script_extension: ${{ steps.initialize.outputs.script_extension }}
@@ -93,3 +96,12 @@ jobs:
           sudo_command: ${{ steps.initialize.outputs.sudo_command }}
           pypi_token: ${{ secrets.PYPI_TOKEN }}
           minisign_private_key: ${{ secrets.MINISIGN_PRIVATE_KEY }}
+
+      # Note that this action is invoked in the original repository (e.g. not dbrownell_DevTools)
+      - name: Custom Destruction (./.github/actions/destroy_publish_python)
+        uses: ./.github/actions/destroy_publish_python
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.has_release_changes.outputs.src == 'true' && hashFiles('.github/actions/destroy_publish_python/action.yml') != '' }}
+        with:
+          operating_system: ${{ inputs.operating_system }}
+          python_version: ${{ inputs.python_version }}
+          custom_destruction_secret: ${{ secrets.CUSTOM_DESTRUCTION_SECRET }}
