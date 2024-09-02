@@ -74,3 +74,4 @@ runs:
       with:
         name: .coverage.${{ inputs.operating_system }}.${{ inputs.python_version }}
         path: "**/.coverage.${{ inputs.operating_system }}.${{ inputs.python_version }}"
+        include-hidden-files: true
