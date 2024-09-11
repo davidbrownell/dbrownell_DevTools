@@ -5,7 +5,7 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/y/davidbrownell/dbrownell_DevTools?color=dark-green)](https://github.com/davidbrownell/dbrownell_DevTools/commits/main/)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dbrownell_DevTools?color=dark-green)](https://pypi.org/project/dbrownell_DevTools/)
 [![PyPI - Version](https://img.shields.io/pypi/v/dbrownell_DevTools?color=dark-green)](https://pypi.org/project/dbrownell_DevTools/)
-[![PyPI - Downloads](https://img.shields.io/pypi/dm/dbrownell_DevTools)](https://pypistats.org/packages/dbrownell_DevTools)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/dbrownell_devtools)](https://pypistats.org/packages/dbrownell_devtools)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9413/badge)](https://www.bestpractices.dev/projects/9413)
 [![Code Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/davidbrownell/f15146b1b8fdc0a5d45ac0eb786a84f7/raw/dbrownell_DevTools_coverage.json)](https://github.com/davidbrownell/dbrownell_DevTools/actions)
 <!-- END: Exclude Package -->
