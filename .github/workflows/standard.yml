@@ -19,7 +19,7 @@ jobs:
   # ----------------------------------------------------------------------
   action_contexts:
     name: "Display GitHub Action Contexts"
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_display_action_contexts.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_display_action_contexts.yaml@CI-v0.24.0
 
   # ----------------------------------------------------------------------
   validate:
@@ -33,6 +33,7 @@ jobs:
           - windows-latest
 
         python_version:
+          - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
@@ -44,7 +45,7 @@ jobs:
     permissions:
       contents: read
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python.yaml@CI-v0.24.0
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -58,13 +59,13 @@ jobs:
     permissions:
       contents: read
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_package_python_coverage.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_package_python_coverage.yaml@CI-v0.24.0
     with:
       gist_id: f15146b1b8fdc0a5d45ac0eb786a84f7
       gist_filename: dbrownell_DevTools_coverage.json
     secrets:
       GIST_TOKEN: ${{ secrets.GIST_TOKEN }}
-    
+
   # ----------------------------------------------------------------------
   create_package:
     needs: package_coverage
@@ -79,6 +80,7 @@ jobs:
           - windows-latest
 
         python_version:
+          - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
@@ -90,7 +92,7 @@ jobs:
     permissions:
       contents: read
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_python_package.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_python_package.yaml@CI-v0.24.0
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -109,6 +111,7 @@ jobs:
           - windows-latest
 
         python_version:
+          - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
@@ -120,7 +123,7 @@ jobs:
     permissions:
       contents: read
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python_package.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_validate_python_package.yaml@CI-v0.24.0
     with:
       operating_system: ${{ matrix.os }}
       python_version: ${{ matrix.python_version }}
@@ -136,6 +139,7 @@ jobs:
 
       matrix:
         python_version:
+          - "3.13"
           - "3.12"
           - "3.11"
           - "3.10"
@@ -148,7 +152,7 @@ jobs:
       contents: read
       packages: write
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_docker_image.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_create_docker_image.yaml@CI-v0.24.0
     with:
       operating_system: ubuntu-latest
       python_version: ${{ matrix.python_version }}
@@ -170,7 +174,7 @@ jobs:
     permissions:
       contents: write
 
-    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_publish_python.yaml@CI-v0.23.0
+    uses: davidbrownell/dbrownell_DevTools/.github/workflows/callable_publish_python.yaml@CI-v0.24.0
     with:
       release_sources_configuration_filename: .github/release_sources.yaml
     secrets:

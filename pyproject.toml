@@ -36,6 +36,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development",
     "Topic :: Utilities",
 ]
@@ -62,7 +63,7 @@ readme = "README.md"
 
 [project.optional-dependencies]
 dev = [
-    "cx_Freeze ~= 6.15",
+    "cx_Freeze ~= 7.2",
 ]
 
 package = [
