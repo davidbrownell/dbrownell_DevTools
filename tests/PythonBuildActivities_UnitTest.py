@@ -445,8 +445,8 @@ class TestPublish:
 class TestBuildBinary:
     # ----------------------------------------------------------------------
     @pytest.mark.skipif(
-        sys.version_info.major == 3 and sys.version_info.minor == 12,
-        reason="cx_Freeze is not yet supported with Python 3.12",
+        sys.version_info.major == 3 and sys.version_info.minor in [12, 13],
+        reason=f"cx_Freeze is not yet supported with Python {sys.version_info.major}.{sys.version_info.minor}",
     )
     def test_BuildBinary(self, tmp_path):
         python_filename = tmp_path / "HelloWorld.py"
