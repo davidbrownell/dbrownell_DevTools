@@ -12,6 +12,8 @@
 <!-- [END] Badges -->
 <!-- END: Exclude Package -->
 
+==This repository has been deprecated; please use [uv](https://docs.astral.sh/uv/) and [copier-UvScaffolding](https://github.com/gt-sse-center/copier-uvScaffolding) instead.==
+
 Common development tools shared across different repositories.
 
 <!-- BEGIN: Exclude Package -->
